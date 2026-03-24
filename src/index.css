@@ -1,0 +1,134 @@
+body {
+  background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%);
+  min-height: 100vh;
+}
+
+body.darkAlgorithm {
+  background-color: #000;
+}
+
+.sidebarMenu {
+  overflow: hidden;
+  padding: 8px !important;
+}
+
+.sidebarMenu > .MuiListItem-root > div {
+  min-width: 46px;
+  margin-right: 5px;
+}
+
+/* Default menu items */
+.sidebarMenu a {
+  border-radius: 10px;
+  margin-bottom: 2px;
+  transition: all 0.15s ease;
+  color: #6D28D9 !important;
+  text-decoration: none;
+}
+
+.sidebarMenu a:hover {
+  background: rgba(124,58,237,0.06) !important;
+}
+
+/* Item text and icon colors */
+.sidebarMenu .MuiListItemText-root span {
+  color: #6D28D9 !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: "Inter", "Roboto", sans-serif;
+}
+
+.sidebarMenu .MuiListItemIcon-root {
+  color: #7C3AED !important;
+  opacity: 0.85;
+}
+
+.level-2-collapse {
+  padding-left: 32px;
+}
+
+.level-2-collapse-main {
+  position: relative;
+}
+
+.level-2-collapse-main a.active-menu {
+  background: transparent;
+}
+
+.level-2-collapse-main .MuiTypography-root {
+  font-size: 13px;
+}
+
+.level-2-collapse-main:before {
+  content: "";
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  height: 100%;
+  width: 2px;
+  background-color: var(--colorPrimary);
+  opacity: 0.5;
+  border-radius: 2px;
+}
+
+.level-2-collapse-main a.active-menu::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: 50%;
+  height: 6px;
+  width: 6px;
+  background-color: var(--colorPrimary);
+  z-index: 1;
+  border-radius: 5px;
+  margin-top: -3px;
+  margin-left: -0.5px;
+}
+
+.active-menu {
+  background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(167,139,250,0.08)) !important;
+  box-shadow: inset 0 0 0 1px rgba(124,58,237,0.2);
+  border-radius: 10px;
+  position: relative;
+}
+
+.active-menu::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 3px;
+  background: #7C3AED;
+  border-radius: 0 3px 3px 0;
+}
+
+.active-menu .MuiTypography-root {
+  font-weight: 600 !important;
+  color: #7C3AED !important;
+}
+
+.active-menu .MuiListItemIcon-root {
+  color: #7C3AED !important;
+}
+
+/* Reset Activation button */
+.sidebar-reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #DC2626;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: "Inter", "Roboto", sans-serif;
+  border: 1px solid rgba(220,38,38,0.15);
+  transition: all 0.15s ease;
+}
+
+.sidebar-reset-btn:hover {
+  background: rgba(220,38,38,0.06);
+  border-color: rgba(220,38,38,0.35);
+}

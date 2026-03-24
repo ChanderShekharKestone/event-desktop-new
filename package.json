@@ -1,0 +1,96 @@
+{
+  "name": "event-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "./",
+  "main": "electron/main.js",
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.9",
+    "@mui/material": "^7.3.9",
+    "@mui/x-data-grid": "^8.27.5",
+    "axios": "^1.13.6",
+    "better-sqlite3": "^12.8.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "html5-qrcode": "^2.3.8",
+    "node-machine-id": "^1.1.12",
+    "react": "^19.2.4",
+    "react-barcode-reader": "^0.0.2",
+    "react-dom": "^19.2.4",
+    "react-qr-code": "^2.0.18",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.13.1",
+    "react-scripts": "5.0.1",
+    "react-to-print": "^3.3.0",
+    "redux": "^5.0.1",
+    "redux-thunk": "^3.1.0",
+    "sonner": "^2.0.7"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "server": "node server/index.js",
+    "react-build": "react-scripts build",
+    "electron": "electron .",
+    "dist": "npm run react-build && electron-builder",
+    "dev": "concurrently \"npm start\" \"npm run server\" \"wait-on http://localhost:3000 && npm run electron\"",
+    "dev:browser": "concurrently \"npm start\" \"npm run server\"",
+    "postinstall": "npx @electron/rebuild -f -w better-sqlite3"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.3",
+    "concurrently": "^9.2.1",
+    "electron": "^26.1.1",
+    "electron-builder": "^26.8.1",
+    "wait-on": "^9.0.4"
+  },
+  "build": {
+    "appId": "com.registration.app",
+    "productName": "Registration System",
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/better-sqlite3/**",
+      "**/node_modules/node-machine-id/**"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/main.js",
+      "server/**/*",
+      "build/**/*",
+      "package.json",
+      "!electron/app_data.db*",
+      "!electron/backup/**",
+      "!electron/settings.json"
+    ],
+    "extraMetadata": {
+      "main": "electron/main.js"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

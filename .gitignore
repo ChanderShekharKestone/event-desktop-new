@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+
+# production build
+/build
+
+# Electron build output
+/dist
+
+# SQLite database and backups
+electron/app_data.db
+electron/app_data.db-wal
+electron/app_data.db-shm
+electron/app_data.db-journal
+electron/backup/
+electron/settings.json
+
+# server-cloud (separate project)
+/server-cloud
+
+# misc
+.DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
