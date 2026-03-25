@@ -11,6 +11,7 @@ import {
   Typography,
   TextField,
   Button,
+  CircularProgress,
   Divider,
   Alert,
   Fade,
@@ -34,7 +35,9 @@ const Activate = () => {
   const location = useLocation();
   const isExpired = location.state?.reason === "expired";
   const hitApi = useApi();
-  const { activationData, machineId } = useSelector((s) => s.mainReducer);
+  const { activationData, machineId, isLoading } = useSelector(
+    (s) => s.mainReducer,
+  );
 
   // Check activation and load machine ID on mount
   useEffect(() => {
@@ -285,6 +288,8 @@ const Activate = () => {
             fullWidth
             size="large"
             onClick={activate}
+            disabled={isLoading === keyNames.activationData}
+            startIcon={isLoading === keyNames.activationData ? <CircularProgress size={18} sx={{ color: "rgba(255,255,255,0.7)" }} /> : null}
             sx={{
               py: 1.5,
               borderRadius: "12px",
@@ -299,10 +304,15 @@ const Activate = () => {
                 boxShadow: "0 6px 28px rgba(124,58,237,0.5)",
                 transform: "translateY(-1px)",
               },
+              "&.Mui-disabled": {
+                background: "linear-gradient(135deg, #A78BFA, #9061EA)",
+                boxShadow: "none",
+                color: "rgba(255,255,255,0.7)",
+              },
               transition: "all 0.2s ease",
             }}
           >
-            Activate License
+            {isLoading === keyNames.activationData ? "Activating…" : "Activate License"}
           </Button>
         </Paper>
       </Box>

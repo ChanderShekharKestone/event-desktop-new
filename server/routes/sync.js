@@ -1,7 +1,8 @@
 const router = require("express").Router();
 const { syncFromCloud } = require("../services/cloudSync");
 const { pushLocalChanges } = require("../services/pushSync");
-const { getPending } = require("../database/pushPending");
+const { getPendingCount } = require("../database/pushPending");
+const settings = require("../settings");
 
 // POST /api/sync/pull - sync from cloud
 router.post("/pull", async (_req, res) => {
@@ -30,7 +31,8 @@ router.post("/push", async (_req, res) => {
 // GET /api/sync/pending-count - count of unsynced local changes
 router.get("/pending-count", (_req, res) => {
   try {
-    const count = getPending().length;
+    const eventId = settings.get("eventId") || "";
+    const count = getPendingCount(eventId);
     res.json({
       status: 200,
       message: "Pending count fetched",

@@ -15,7 +15,7 @@ async function pushLocalChanges() {
     return;
   }
 
-  const pending = getPending();
+  const pending = getPending(eventId);
   for (const item of pending) {
     try {
       const row = db
@@ -24,7 +24,7 @@ async function pushLocalChanges() {
 
       if (!row) {
         // Row deleted locally — nothing to push
-        removePending(item.registration_id);
+        removePending(item.registration_id, eventId);
         continue;
       }
 
@@ -46,7 +46,7 @@ async function pushLocalChanges() {
           headers: CLOUD_HEADERS,
         });
       }
-      removePending(item.registration_id);
+      removePending(item.registration_id, eventId);
     } catch (err) {
       const detail = err.response?.data || err.message;
       throw new Error(

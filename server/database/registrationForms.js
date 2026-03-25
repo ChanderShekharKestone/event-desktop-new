@@ -74,10 +74,12 @@ function rowToObject(r) {
   };
 }
 
-function getRegistrationFormByAttendeeType(attendeeTypeName) {
-  const row = db
-    .prepare(`SELECT * FROM registration_forms WHERE attendee_type_name = ? LIMIT 1`)
-    .get(attendeeTypeName);
+function getRegistrationFormByAttendeeType(attendeeTypeName, eventId = null) {
+  const where = eventId
+    ? "WHERE attendee_type_name = ? AND event_id = ?"
+    : "WHERE attendee_type_name = ?";
+  const params = eventId ? [attendeeTypeName, eventId] : [attendeeTypeName];
+  const row = db.prepare(`SELECT * FROM registration_forms ${where} LIMIT 1`).get(...params);
   return row ? rowToObject(row) : null;
 }
 

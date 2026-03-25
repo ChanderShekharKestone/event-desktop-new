@@ -114,10 +114,22 @@ function runMigrations() {
 
   db.prepare(
     `CREATE TABLE IF NOT EXISTS sync_state (
-      id INTEGER PRIMARY KEY,
+      eventId TEXT PRIMARY KEY,
       last_sync TEXT
     )`,
   ).run();
+
+  // Migrate old single-row sync_state to new eventId-keyed schema
+  {
+    const cols = db.prepare("PRAGMA table_info(sync_state)").all().map((c) => c.name);
+    if (!cols.includes("eventId")) {
+      db.prepare(`ALTER TABLE sync_state ADD COLUMN eventId TEXT`).run();
+    }
+    if (cols.includes("id")) {
+      // Move existing row under empty-string key so old data isn't lost
+      db.prepare(`UPDATE sync_state SET eventId = '' WHERE eventId IS NULL`).run();
+    }
+  }
 
   db.prepare(
     `CREATE TABLE IF NOT EXISTS sync_queue (
@@ -153,10 +165,20 @@ function runMigrations() {
   db.prepare(
     `CREATE TABLE IF NOT EXISTS push_pending (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      registration_id INTEGER NOT NULL UNIQUE,
-      created_at TEXT NOT NULL
+      registration_id INTEGER NOT NULL,
+      eventId TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL,
+      UNIQUE(registration_id, eventId)
     )`,
   ).run();
+
+  // Migrate old push_pending: add eventId column if missing
+  {
+    const cols = db.prepare("PRAGMA table_info(push_pending)").all().map((c) => c.name);
+    if (!cols.includes("eventId")) {
+      db.prepare(`ALTER TABLE push_pending ADD COLUMN eventId TEXT NOT NULL DEFAULT ''`).run();
+    }
+  }
 
   db.prepare(
     `CREATE TABLE IF NOT EXISTS badge_templates (

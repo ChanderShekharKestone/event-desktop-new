@@ -1,8 +1,13 @@
 const express = require("express");
 const cors = require("cors");
+const https = require("https");
 const os = require("os");
 const path = require("path");
-const { PORT } = require("./config");
+
+const selfsigned = require("selfsigned");
+const { PORT, HTTPS_PORT } = require("./config");
+const KIOSK_PORT = HTTPS_PORT;
+const KIOSK_PROTOCOL = "https";
 const SDK_FILES_DIR = process.env.USER_DATA_PATH
   ? path.join(process.env.USER_DATA_PATH, "sdk-files")
   : path.join(__dirname, "../sdk-files");
@@ -60,7 +65,19 @@ app.get("/api/health", (_req, res) => res.json({ status: 200, message: "OK" }));
 // Run DB migrations and start server
 runMigrations();
 
-app.get("/api/local-ip", (_req, res) => res.json({ ip: localIP, port: PORT }));
+app.get("/api/local-ip", (_req, res) => {
+  const nets = os.networkInterfaces();
+  let ip = "localhost";
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === "IPv4" && !net.internal) {
+        ip = net.address;
+        break;
+      }
+    }
+  }
+  res.json({ ip, port: KIOSK_PORT, protocol: KIOSK_PROTOCOL });
+});
 
 app.listen(PORT, () => {
   const nets = os.networkInterfaces();
@@ -73,9 +90,14 @@ app.listen(PORT, () => {
     }
   }
   console.log(`Server running on http://localhost:${PORT}`);
-  console.log(
-    `LAN registration URL: http://${localIP}:${PORT}/#/register?type=attendee`,
-  );
+  console.log(`LAN registration URL: http://${localIP}:${PORT}/#/register?type=attendee`);
+});
+
+// HTTPS server for kiosk — browsers require secure context for camera access
+const attrs = [{ name: "commonName", value: "localhost" }];
+const pems = selfsigned.generate(attrs, { days: 365 });
+https.createServer({ key: pems.private, cert: pems.cert }, app).listen(HTTPS_PORT, () => {
+  console.log(`HTTPS server running on https://localhost:${HTTPS_PORT}`);
 });
 
 // Background sync intervals

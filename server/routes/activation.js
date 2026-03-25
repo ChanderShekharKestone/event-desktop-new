@@ -6,6 +6,8 @@ const { machineId } = require("node-machine-id");
 const settings = require("../settings");
 const { db } = require("../db");
 const { CLOUD_BASE, CLOUD_HEADERS } = require("../config");
+const { syncFromCloud } = require("../services/cloudSync");
+const { clearSyncState } = require("../database/syncState");
 
 async function getMachineId() {
   const rawId = await machineId(true); // true = raw (un-hashed) hardware ID
@@ -80,10 +82,17 @@ router.post("/", async (req, res) => {
 
     const { eventId, expiresAt } = cloudRes.data.data;
 
+    // If switching to a different event, clear old event's sync state
+    const prevEventId = settings.get("eventId");
+    if (prevEventId && prevEventId !== String(eventId)) {
+      clearSyncState(prevEventId);
+    }
+
     settings.set("activated", true);
     settings.set("eventId", String(eventId));
     settings.set("expiresAt", expiresAt);
     saveEventId(eventId);
+    await syncFromCloud().catch(() => {});
 
     res.json({
       status: 200,
@@ -99,6 +108,8 @@ router.post("/", async (req, res) => {
 
 // DELETE /api/activation — reset activation
 router.delete("/", (_req, res) => {
+  const eventId = settings.get("eventId");
+  if (eventId) clearSyncState(eventId);
   settings.del("activated");
   settings.del("eventId");
   settings.del("expiresAt");

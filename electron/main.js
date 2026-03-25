@@ -9,12 +9,10 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 process.env.USER_DATA_PATH = app.getPath("userData");
-// In dev mode the server runs as a separate process (npm run server).
-// In production it is embedded inside Electron.
-if (app.isPackaged) {
-  require("../server/index");
-}
-const { backupFolder, dbPath } = require("../server/db");
+// Server always runs embedded inside Electron (dev and production).
+require("../server/index");
+const { getDbPaths } = require("../server/dbPaths");
+const { backupFolder, dbPath } = getDbPaths();
 
 let mainWindow = null;
 

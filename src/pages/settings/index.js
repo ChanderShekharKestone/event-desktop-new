@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Box,
   Typography,
@@ -11,7 +11,7 @@ import {
   InputAdornment,
   OutlinedInput,
 } from "@mui/material";
-import { CloudSync, CloudUpload, Category, Badge, AppRegistration, ContentCopy, Check, QrCode2 } from "@mui/icons-material";
+import { CloudSync, CloudUpload, Category, Badge, AppRegistration, ContentCopy, Check, QrCode2, Refresh } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 import useApi from "../../hooks/useApi";
 import keyNames from "../../keyName";
@@ -72,11 +72,15 @@ const Settings = () => {
   const [kioskUrl, setKioskUrl] = useState("");
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
+  const fetchKioskUrl = () => {
     fetch(apiPath + apiLocalIp)
       .then((r) => r.json())
-      .then(({ ip, port }) => setKioskUrl(`http://${ip}:${port}/#/scan`))
+      .then(({ ip, port, protocol = "https" }) => setKioskUrl(`${protocol}://${ip}:${port}/#/scan`))
       .catch(() => setKioskUrl(`http://localhost:4001/#/scan`));
+  };
+
+  useEffect(() => {
+    fetchKioskUrl();
   }, []);
 
   const handleCopy = () => {
@@ -120,9 +124,20 @@ const Settings = () => {
     hitApi(apiSyncPull, null, method.post, keyNames.syncPullData, toast);
   };
 
+  const wasPushing = useRef(false);
+
   const handlePush = () => {
     hitApi(apiSyncPush, null, method.post, keyNames.syncPushData, toast);
   };
+
+  useEffect(() => {
+    if (isLoading === keyNames.syncPushData) {
+      wasPushing.current = true;
+    } else if (wasPushing.current && isLoading === "noLoading") {
+      wasPushing.current = false;
+      hitApi(apiSyncPendingCount, null, method.get, keyNames.syncPendingCount, null);
+    }
+  }, [isLoading, hitApi]);
 
   return (
     <Box>
@@ -329,6 +344,9 @@ const Settings = () => {
           }}
           endAdornment={
             <InputAdornment position="end">
+              <IconButton onClick={fetchKioskUrl} edge="end" sx={{ color: "#7C3AED" }}>
+                <Refresh fontSize="small" />
+              </IconButton>
               <IconButton onClick={handleCopy} edge="end" sx={{ color: copied ? "#16A34A" : "#7C3AED" }}>
                 {copied ? <Check fontSize="small" /> : <ContentCopy fontSize="small" />}
               </IconButton>

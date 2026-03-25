@@ -1,15 +1,19 @@
 const { db } = require("../db");
 
-function getLastSync() {
-  const row = db.prepare("SELECT last_sync FROM sync_state WHERE id=1").get();
+function getLastSync(eventId) {
+  const row = db.prepare("SELECT last_sync FROM sync_state WHERE eventId = ?").get(eventId);
   return row ? row.last_sync : null;
 }
 
-function updateLastSync(time) {
+function updateLastSync(time, eventId) {
   db.prepare(
-    `INSERT INTO sync_state (id, last_sync) VALUES (1, ?)
-     ON CONFLICT(id) DO UPDATE SET last_sync = excluded.last_sync`
-  ).run(time);
+    `INSERT INTO sync_state (eventId, last_sync) VALUES (?, ?)
+     ON CONFLICT(eventId) DO UPDATE SET last_sync = excluded.last_sync`
+  ).run(eventId, time);
 }
 
-module.exports = { getLastSync, updateLastSync };
+function clearSyncState(eventId) {
+  db.prepare(`DELETE FROM sync_state WHERE eventId = ?`).run(eventId);
+}
+
+module.exports = { getLastSync, updateLastSync, clearSyncState };

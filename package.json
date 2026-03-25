@@ -34,7 +34,7 @@
     "react-build": "react-scripts build",
     "electron": "electron .",
     "dist": "npm run react-build && electron-builder",
-    "dev": "concurrently \"npm start\" \"npm run server\" \"wait-on http://localhost:3000 && npm run electron\"",
+    "dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && npm run electron\"",
     "dev:browser": "concurrently \"npm start\" \"npm run server\"",
     "postinstall": "npx @electron/rebuild -f -w better-sqlite3"
   },

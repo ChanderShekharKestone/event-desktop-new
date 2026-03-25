@@ -1,9 +1,30 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
+
+const stopCameraTracks = () => {
+  navigator.mediaDevices?.enumerateDevices().then(() => {
+    document.querySelectorAll("video").forEach((video) => {
+      video.srcObject?.getTracks().forEach((track) => track.stop());
+      video.srcObject = null;
+    });
+  });
+};
 
 const useQrScanner = ({ onScan }) => {
   const scannerRef = useRef(null);
   const [isScanning, setIsScanning] = useState(false);
+
+  const stopScanner = async () => {
+    try {
+      if (scannerRef.current?.getState() === 2) {
+        await scannerRef.current.stop();
+      }
+      scannerRef.current?.clear();
+    } catch (_) {}
+    scannerRef.current = null;
+    stopCameraTracks();
+    setIsScanning(false);
+  };
 
   const startScanning = async () => {
     if (isScanning) return;
@@ -19,33 +40,24 @@ const useQrScanner = ({ onScan }) => {
         { facingMode: "environment" },
         { fps: 10, qrbox: 250, disableFlip: false },
         async (decodedText) => {
+          await stopScanner();
           onScan(decodedText);
-
-          if (scannerRef.current?.getState() === 2) {
-            await scannerRef.current.stop();
-            await scannerRef.current.clear();
-          }
-
-          scannerRef.current = null;
-          setIsScanning(false);
         }
       );
     } catch (err) {
       console.error("QR start error", err);
-      setIsScanning(false);
+      await stopScanner();
     }
   };
 
-  const resetScanner = async () => {
-    if (scannerRef.current) {
-      await scannerRef.current.stop();
-      await scannerRef.current.clear();
-      scannerRef.current = null;
-    }
-    setIsScanning(false);
-  };
+  // Stop camera when component unmounts
+  useEffect(() => {
+    return () => {
+      stopScanner();
+    };
+  }, []);
 
-  return { startScanning, resetScanner, isScanning };
+  return { startScanning, resetScanner: stopScanner, isScanning };
 };
 
 export default useQrScanner;

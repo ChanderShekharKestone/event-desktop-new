@@ -22,7 +22,8 @@ router.get("/", (_req, res) => {
 // GET /api/registration-fields/by-type/:attendeeTypeName
 router.get("/by-type/:attendeeTypeName", (req, res) => {
   try {
-    const data = getRegistrationFormByAttendeeType(req.params.attendeeTypeName);
+    const eventId = settings.get("eventId") || null;
+    const data = getRegistrationFormByAttendeeType(req.params.attendeeTypeName, eventId);
     if (!data)
       return res.status(404).json({ status: 404, message: "Not found" });
     res.json({ status: 200, message: "Registration form fetched", data });

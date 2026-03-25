@@ -157,7 +157,7 @@ function getRegistrationsPaginated({
 }
 
 function queueCheckin(row) {
-  if (row?.id) addPending(row.id);
+  if (row?.id) addPending(row.id, row.eventId || '');
 }
 
 function updateRegistration(idValue, data) {
@@ -209,7 +209,7 @@ function updateRegistration(idValue, data) {
   const row = db
     .prepare("SELECT * FROM registrations WHERE id = ?")
     .get(idValue);
-  if (row?.id) addPending(row.id);
+  if (row?.id) addPending(row.id, row.eventId || '');
   return row ? rowToObject(row) : null;
 }
 

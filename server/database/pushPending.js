@@ -1,18 +1,21 @@
 const { db } = require("../db");
 
-function addPending(registrationId) {
-  // INSERT OR IGNORE — deduplicates: multiple updates before push = one entry
+function addPending(registrationId, eventId) {
   db.prepare(
-    `INSERT OR IGNORE INTO push_pending (registration_id, created_at) VALUES (?, ?)`
-  ).run(registrationId, new Date().toISOString());
+    `INSERT OR IGNORE INTO push_pending (registration_id, eventId, created_at) VALUES (?, ?, ?)`
+  ).run(registrationId, eventId, new Date().toISOString());
 }
 
-function getPending() {
-  return db.prepare(`SELECT * FROM push_pending ORDER BY created_at ASC`).all();
+function getPending(eventId) {
+  return db.prepare(`SELECT * FROM push_pending WHERE eventId = ? ORDER BY created_at ASC`).all(eventId);
 }
 
-function removePending(registrationId) {
-  db.prepare(`DELETE FROM push_pending WHERE registration_id = ?`).run(registrationId);
+function removePending(registrationId, eventId) {
+  db.prepare(`DELETE FROM push_pending WHERE registration_id = ? AND eventId = ?`).run(registrationId, eventId);
 }
 
-module.exports = { addPending, getPending, removePending };
+function getPendingCount(eventId) {
+  return db.prepare(`SELECT COUNT(*) as count FROM push_pending WHERE eventId = ?`).get(eventId).count;
+}
+
+module.exports = { addPending, getPending, removePending, getPendingCount };
