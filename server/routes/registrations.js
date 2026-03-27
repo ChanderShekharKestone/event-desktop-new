@@ -67,7 +67,7 @@ router.post("/", (req, res) => {
             ? "mob001"
             : type || attendeeType || "attendee",
       moderator: moderator ? 1 : 0,
-      customerId: customerId || null,
+      customerId: customerId || settings.get("customerId") || null,
       termsAndCondn: termsAndCondn ? 1 : 0,
       areaOfInterest: areaOfInterest || [],
     });

@@ -22,11 +22,17 @@ async function getMachineId() {
 }
 
 function saveEventId(eventId) {
-  const exists = db.prepare(`SELECT 1 FROM app_settings WHERE key = 'eventId'`).get();
+  const exists = db
+    .prepare(`SELECT 1 FROM app_settings WHERE key = 'eventId'`)
+    .get();
   if (exists) {
-    db.prepare(`UPDATE app_settings SET value = ? WHERE key = 'eventId'`).run(String(eventId));
+    db.prepare(`UPDATE app_settings SET value = ? WHERE key = 'eventId'`).run(
+      String(eventId),
+    );
   } else {
-    db.prepare(`INSERT INTO app_settings (key, value) VALUES ('eventId', ?)`).run(String(eventId));
+    db.prepare(
+      `INSERT INTO app_settings (key, value) VALUES ('eventId', ?)`,
+    ).run(String(eventId));
   }
 }
 
@@ -45,6 +51,7 @@ router.get("/", (_req, res) => {
       settings.del("activated");
       settings.del("eventId");
       settings.del("expiresAt");
+      settings.del("customerId");
       return res.json({
         status: 200,
         data: { activated: false, reason: "expired" },
@@ -81,8 +88,11 @@ router.post("/", async (req, res) => {
       { activationKey, machineId },
       { headers: CLOUD_HEADERS },
     );
+    const { eventId, expiresAt, customerId } = cloudRes.data.data;
 
-    const { eventId, expiresAt } = cloudRes.data.data;
+    if (!customerId) {
+      return res.status(400).json({ status: 400, message: "Activation failed: customerId missing in response" });
+    }
 
     // If switching to a different event, clear old event's sync state
     const prevEventId = settings.get("eventId");
@@ -93,6 +103,7 @@ router.post("/", async (req, res) => {
     settings.set("activated", true);
     settings.set("eventId", String(eventId));
     settings.set("expiresAt", expiresAt);
+    settings.set("customerId", String(customerId));
     saveEventId(eventId);
     await syncFromCloud().catch(() => {});
 
@@ -115,6 +126,7 @@ router.delete("/", (_req, res) => {
   settings.del("activated");
   settings.del("eventId");
   settings.del("expiresAt");
+  settings.del("customerId");
   saveEventId("");
   res.json({ status: 200, message: "Activation reset", data: false });
 });
