@@ -12,7 +12,9 @@ async function syncFromCloud() {
     const eventId = settings.get("eventId");
     if (!eventId) return;
 
-    const localCount = db.prepare("SELECT COUNT(*) as count FROM registrations WHERE eventId = ?").get(eventId).count;
+    const localCount = db
+      .prepare("SELECT COUNT(*) as count FROM registrations WHERE eventId = ?")
+      .get(eventId).count;
     const lastSync = localCount > 0 ? getLastSync(eventId) : null;
     const params = new URLSearchParams({ eventId });
     if (lastSync) params.set("updatedAfter", lastSync);
@@ -21,7 +23,7 @@ async function syncFromCloud() {
       headers: CLOUD_HEADERS,
     });
     const users = res.data.data;
-
+    console.log(users.length, "length");
     if (users.length) {
       insertManyFromCloud(users);
 

@@ -1,5 +1,5 @@
 body {
-  background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%);
+  background: linear-gradient(135deg, #F0EEFF 0%, #E5DEFF 100%);
   min-height: 100vh;
 }
 
@@ -22,24 +22,24 @@ body.darkAlgorithm {
   border-radius: 10px;
   margin-bottom: 2px;
   transition: all 0.15s ease;
-  color: #6D28D9 !important;
+  color: #2F1A7A !important;
   text-decoration: none;
 }
 
 .sidebarMenu a:hover {
-  background: rgba(124,58,237,0.06) !important;
+  background: rgba(47,26,122,0.06) !important;
 }
 
 /* Item text and icon colors */
 .sidebarMenu .MuiListItemText-root span {
-  color: #6D28D9 !important;
+  color: #2F1A7A !important;
   font-size: 0.875rem;
   font-weight: 500;
   font-family: "Inter", "Roboto", sans-serif;
 }
 
 .sidebarMenu .MuiListItemIcon-root {
-  color: #7C3AED !important;
+  color: #2F1A7A !important;
   opacity: 0.85;
 }
 
@@ -86,8 +86,8 @@ body.darkAlgorithm {
 }
 
 .active-menu {
-  background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(167,139,250,0.08)) !important;
-  box-shadow: inset 0 0 0 1px rgba(124,58,237,0.2);
+  background: linear-gradient(135deg, rgba(47,26,122,0.12), rgba(107,79,200,0.08)) !important;
+  box-shadow: inset 0 0 0 1px rgba(47,26,122,0.2);
   border-radius: 10px;
   position: relative;
 }
@@ -99,17 +99,17 @@ body.darkAlgorithm {
   top: 20%;
   height: 60%;
   width: 3px;
-  background: #7C3AED;
+  background: #2F1A7A;
   border-radius: 0 3px 3px 0;
 }
 
 .active-menu .MuiTypography-root {
   font-weight: 600 !important;
-  color: #7C3AED !important;
+  color: #2F1A7A !important;
 }
 
 .active-menu .MuiListItemIcon-root {
-  color: #7C3AED !important;
+  color: #2F1A7A !important;
 }
 
 /* Reset Activation button */

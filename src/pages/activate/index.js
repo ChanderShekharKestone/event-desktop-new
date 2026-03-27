@@ -79,7 +79,7 @@ const Activate = () => {
         justifyContent="center"
         minHeight="100vh"
         sx={{
-          background: "linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)",
+          background: "linear-gradient(135deg, #F3F0FF 0%, #E9E3FF 100%)",
         }}
       >
         <Paper
@@ -89,8 +89,8 @@ const Activate = () => {
             maxWidth: 480,
             width: "90%",
             background: "#FFFFFF",
-            border: "1px solid rgba(124,58,237,0.15)",
-            boxShadow: "0 8px 40px rgba(124,58,237,0.12)",
+            border: "1px solid rgba(47,26,122,0.15)",
+            boxShadow: "0 8px 40px rgba(47,26,122,0.12)",
             borderRadius: "16px",
             position: "relative",
             overflow: "hidden",
@@ -101,7 +101,7 @@ const Activate = () => {
               left: 0,
               right: 0,
               height: "3px",
-              background: "linear-gradient(90deg, #7C3AED, #A78BFA, #7C3AED)",
+              background: "linear-gradient(90deg, #2F1A7A, #6B4FC8, #2F1A7A)",
             },
           }}
         >
@@ -112,11 +112,11 @@ const Activate = () => {
                 width: 44,
                 height: 44,
                 borderRadius: "12px",
-                background: "linear-gradient(135deg, #7C3AED, #A78BFA)",
+                background: "linear-gradient(135deg, #2F1A7A, #6B4FC8)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 4px 16px rgba(124,58,237,0.3)",
+                boxShadow: "0 4px 16px rgba(47,26,122,0.3)",
                 flexShrink: 0,
               }}
             >
@@ -137,7 +137,7 @@ const Activate = () => {
               <Typography
                 variant="caption"
                 sx={{
-                  color: "#7C3AED",
+                  color: "#2F1A7A",
                   fontFamily: '"Inter", "Roboto", sans-serif',
                 }}
               >
@@ -146,25 +146,25 @@ const Activate = () => {
             </Box>
           </Box>
 
-          <Divider sx={{ my: 3, borderColor: "rgba(124,58,237,0.12)" }} />
+          <Divider sx={{ my: 3, borderColor: "rgba(47,26,122,0.12)" }} />
 
           {/* Machine ID */}
           <Box
             sx={{
-              background: "rgba(124,58,237,0.04)",
-              border: "1px solid rgba(124,58,237,0.15)",
+              background: "rgba(47,26,122,0.04)",
+              border: "1px solid rgba(47,26,122,0.15)",
               borderRadius: "12px",
               p: 2,
               mb: 3,
             }}
           >
             <Box display="flex" alignItems="center" gap={1} mb={1}>
-              <Fingerprint sx={{ fontSize: 15, color: "#7C3AED" }} />
+              <Fingerprint sx={{ fontSize: 15, color: "#2F1A7A" }} />
               <Typography
                 variant="caption"
                 fontWeight={600}
                 sx={{
-                  color: "#7C3AED",
+                  color: "#2F1A7A",
                   textTransform: "uppercase",
                   letterSpacing: "0.08em",
                   fontFamily: '"Inter", "Roboto", sans-serif',
@@ -178,8 +178,8 @@ const Activate = () => {
               alignItems="center"
               gap={1}
               sx={{
-                background: "#F5F3FF",
-                border: "1px solid rgba(124,58,237,0.25)",
+                background: "#F3F0FF",
+                border: "1px solid rgba(47,26,122,0.25)",
                 borderRadius: "10px",
                 px: 1.5,
                 py: 0.75,
@@ -205,11 +205,11 @@ const Activate = () => {
                   onClick={copyMachineId}
                   disabled={!machineId}
                   sx={{
-                    color: copied ? "#059669" : "#7C3AED",
+                    color: copied ? "#059669" : "#2F1A7A",
                     background: copied
                       ? "rgba(5,150,105,0.08)"
-                      : "rgba(124,58,237,0.08)",
-                    "&:hover": { background: "rgba(124,58,237,0.15)" },
+                      : "rgba(47,26,122,0.08)",
+                    "&:hover": { background: "rgba(47,26,122,0.15)" },
                     flexShrink: 0,
                     width: 28,
                     height: 28,
@@ -249,7 +249,7 @@ const Activate = () => {
             slotProps={{
               input: {
                 startAdornment: (
-                  <VpnKey sx={{ color: "#7C3AED", mr: 1, fontSize: 20 }} />
+                  <VpnKey sx={{ color: "#2F1A7A", mr: 1, fontSize: 20 }} />
                 ),
               },
             }}
@@ -258,9 +258,9 @@ const Activate = () => {
               "& .MuiOutlinedInput-root": {
                 borderRadius: "12px",
                 fontFamily: '"Inter", "Roboto", sans-serif',
-                "& fieldset": { borderColor: "rgba(124,58,237,0.25)" },
-                "&:hover fieldset": { borderColor: "rgba(124,58,237,0.5)" },
-                "&.Mui-focused fieldset": { borderColor: "#7C3AED" },
+                "& fieldset": { borderColor: "rgba(47,26,122,0.25)" },
+                "&:hover fieldset": { borderColor: "rgba(47,26,122,0.5)" },
+                "&.Mui-focused fieldset": { borderColor: "#2F1A7A" },
               },
             }}
           />
@@ -297,15 +297,15 @@ const Activate = () => {
               fontWeight: 600,
               fontSize: "0.95rem",
               fontFamily: '"Inter", "Roboto", sans-serif',
-              background: "linear-gradient(135deg, #7C3AED, #6D28D9)",
-              boxShadow: "0 4px 20px rgba(124,58,237,0.35)",
+              background: "linear-gradient(135deg, #2F1A7A, #231460)",
+              boxShadow: "0 4px 20px rgba(47,26,122,0.35)",
               "&:hover": {
-                background: "linear-gradient(135deg, #6D28D9, #5B21B6)",
-                boxShadow: "0 6px 28px rgba(124,58,237,0.5)",
+                background: "linear-gradient(135deg, #231460, #1A0F4D)",
+                boxShadow: "0 6px 28px rgba(47,26,122,0.5)",
                 transform: "translateY(-1px)",
               },
               "&.Mui-disabled": {
-                background: "linear-gradient(135deg, #A78BFA, #9061EA)",
+                background: "linear-gradient(135deg, #6B4FC8, #2F1A7A)",
                 boxShadow: "none",
                 color: "rgba(255,255,255,0.7)",
               },

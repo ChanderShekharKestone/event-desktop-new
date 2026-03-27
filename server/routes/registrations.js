@@ -18,6 +18,15 @@ router.post("/", (req, res) => {
       organization,
       designation,
       eventId,
+      campaignSource,
+      customfields,
+      avatarUrl,
+      type,
+      attendeeType,
+      moderator,
+      customerId,
+      termsAndCondn,
+      areaOfInterest,
     } = req.body;
     if (!firstName || !email) {
       return res.status(400).json({
@@ -25,6 +34,18 @@ router.post("/", (req, res) => {
         message: "First name and email are required",
         data: null,
       });
+    }
+
+    let roleType;
+
+    if (attendeeType === "exhibitor") {
+      roleType = "vos68";
+    } else if (attendeeType === "speaker") {
+      roleType = "vos58";
+    } else if (attendeeType === "moderator") {
+      roleType = "vos82";
+    } else {
+      roleType = "vos78";
     }
 
     const newUser = insertRegistration({
@@ -35,6 +56,20 @@ router.post("/", (req, res) => {
       organization,
       designation,
       eventId: eventId || settings.get("eventId") || null,
+      campaignSource: campaignSource || null,
+      roleId: roleType,
+      customfields: customfields || null,
+      avatarUrl: avatarUrl || "https://cdn.vosmos.live/VEP/assests/dummy.png",
+      type:
+        attendeeType === "partner"
+          ? "mob011"
+          : attendeeType === "sponsor"
+            ? "mob001"
+            : type || attendeeType || "attendee",
+      moderator: moderator ? 1 : 0,
+      customerId: customerId || null,
+      termsAndCondn: termsAndCondn ? 1 : 0,
+      areaOfInterest: areaOfInterest || [],
     });
     res.json({
       status: 200,
@@ -119,6 +154,7 @@ router.get("/", (req, res) => {
       search = "",
       sort = "createdAt",
       order = "desc",
+      type = "",
     } = req.query;
     const eventId = settings.get("eventId") || null;
     const result = getRegistrationsPaginated({
@@ -128,6 +164,7 @@ router.get("/", (req, res) => {
       sort,
       order,
       eventId,
+      type,
     });
     res.json({
       status: 200,

@@ -6,10 +6,12 @@ function getLastSync(eventId) {
 }
 
 function updateLastSync(time, eventId) {
-  db.prepare(
-    `INSERT INTO sync_state (eventId, last_sync) VALUES (?, ?)
-     ON CONFLICT(eventId) DO UPDATE SET last_sync = excluded.last_sync`
-  ).run(eventId, time);
+  const exists = db.prepare(`SELECT 1 FROM sync_state WHERE eventId = ?`).get(eventId);
+  if (exists) {
+    db.prepare(`UPDATE sync_state SET last_sync = ? WHERE eventId = ?`).run(time, eventId);
+  } else {
+    db.prepare(`INSERT INTO sync_state (eventId, last_sync) VALUES (?, ?)`).run(eventId, time);
+  }
 }
 
 function clearSyncState(eventId) {

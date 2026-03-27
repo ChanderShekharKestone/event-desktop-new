@@ -1,12 +1,17 @@
 const { db } = require("../db");
 
-function addToQueue(action, payload) {
+function addToQueue(action, payload, eventId = "") {
   db.prepare(
-    `INSERT INTO sync_queue (action, payload, created_at) VALUES (?, ?, ?)`
-  ).run(action, JSON.stringify(payload), new Date().toISOString());
+    `INSERT INTO sync_queue (action, payload, eventId, created_at) VALUES (?, ?, ?, ?)`
+  ).run(action, JSON.stringify(payload), eventId || "", new Date().toISOString());
 }
 
-function getPendingQueue() {
+function getPendingQueue(eventId = null) {
+  if (eventId) {
+    return db
+      .prepare(`SELECT * FROM sync_queue WHERE status='pending' AND eventId=? ORDER BY id ASC`)
+      .all(eventId);
+  }
   return db
     .prepare(`SELECT * FROM sync_queue WHERE status='pending' ORDER BY id ASC`)
     .all();

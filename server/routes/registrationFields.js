@@ -6,6 +6,7 @@ const {
   getRegistrationForms,
   getRegistrationFormByAttendeeType,
 } = require("../database/registrationForms");
+const { getAttendeeTypes } = require("../database/attendeeTypes");
 const { CLOUD_BASE, CLOUD_HEADERS } = require("../config");
 
 // GET /api/registration-fields — load from local SQLite (survives refresh)
@@ -23,10 +24,15 @@ router.get("/", (_req, res) => {
 router.get("/by-type/:attendeeTypeName", (req, res) => {
   try {
     const eventId = settings.get("eventId") || null;
-    const data = getRegistrationFormByAttendeeType(req.params.attendeeTypeName, eventId);
+    const data = getRegistrationFormByAttendeeType(
+      req.params.attendeeTypeName,
+      eventId,
+    );
+
     if (!data)
       return res.status(404).json({ status: 404, message: "Not found" });
-    res.json({ status: 200, message: "Registration form fetched", data });
+    const attendeeTypes = getAttendeeTypes(eventId);
+    res.json({ status: 200, message: "Registration form fetched", data: { ...data, attendeeTypes } });
   } catch (err) {
     res.status(500).json({ status: 500, message: err.message });
   }
@@ -37,7 +43,9 @@ router.post("/pull", async (_req, res) => {
   try {
     const eventId = settings.get("eventId");
     if (!eventId) {
-      return res.status(401).json({ status: 401, message: "Not activated", logout: true });
+      return res
+        .status(401)
+        .json({ status: 401, message: "Not activated", logout: true });
     }
     const { data } = await axios.get(
       `${CLOUD_BASE}/registration-fields/${eventId}`,

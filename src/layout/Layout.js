@@ -27,7 +27,7 @@ const AdminLayout = () => {
         sx={{
           zIndex: 1300,
           background: "#0D0818",
-          borderBottom: "1px solid rgba(124,58,237,0.2)",
+          borderBottom: "1px solid rgba(47,26,122,0.2)",
           boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
           height: 56,
         }}
@@ -36,7 +36,7 @@ const AdminLayout = () => {
           {/* Sidebar toggle */}
           <IconButton
             onClick={() => setOpen((v) => !v)}
-            sx={{ color: "#A78BFA", p: "4px", fontSize: 19, lineHeight: 1 }}
+            sx={{ color: "#6B4FC8", p: "4px", fontSize: 19, lineHeight: 1 }}
           >
             <MenuIcon />
           </IconButton>
@@ -48,14 +48,14 @@ const AdminLayout = () => {
               height: 32,
               borderRadius: "9px",
               flexShrink: 0,
-              background: "linear-gradient(135deg, #7C3AED, #A78BFA)",
+              background: "linear-gradient(135deg, #2F1A7A, #6B4FC8)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontWeight: 900,
               fontSize: 16,
               color: "#fff",
-              boxShadow: "0 0 14px rgba(124,58,237,0.4)",
+              boxShadow: "0 0 14px rgba(47,26,122,0.4)",
             }}
           >
             V
@@ -77,7 +77,7 @@ const AdminLayout = () => {
             <Box
               component="span"
               sx={{
-                color: "#A78BFA",
+                color: "#6B4FC8",
                 fontSize: "9px",
                 textTransform: "uppercase",
                 letterSpacing: "2px",
@@ -96,13 +96,13 @@ const AdminLayout = () => {
           <IconButton
             onClick={() => window.location.reload()}
             sx={{
-              color: "#A78BFA",
-              border: "1px solid rgba(124,58,237,0.3)",
+              color: "#6B4FC8",
+              border: "1px solid rgba(47,26,122,0.3)",
               borderRadius: "8px",
               p: "6px",
               "&:hover": {
-                background: "rgba(124,58,237,0.12)",
-                borderColor: "rgba(124,58,237,0.6)",
+                background: "rgba(47,26,122,0.12)",
+                borderColor: "rgba(47,26,122,0.6)",
               },
             }}
           >

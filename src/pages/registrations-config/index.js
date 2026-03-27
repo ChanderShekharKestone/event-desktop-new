@@ -24,9 +24,9 @@ const fieldSx = {
   "& .MuiOutlinedInput-root": {
     borderRadius: "10px",
     fontSize: "0.875rem",
-    "& fieldset": { borderColor: "rgba(124,58,237,0.2)" },
-    "&:hover fieldset": { borderColor: "rgba(124,58,237,0.4)" },
-    "&.Mui-focused fieldset": { borderColor: "#7C3AED" },
+    "& fieldset": { borderColor: "rgba(47,26,122,0.2)" },
+    "&:hover fieldset": { borderColor: "rgba(47,26,122,0.4)" },
+    "&.Mui-focused fieldset": { borderColor: "#2F1A7A" },
   },
 };
 
@@ -91,7 +91,7 @@ const FormRow = ({ form, sdkConfig, lanBase, onSaved }) => {
     <Box
       sx={{
         bgcolor: "#fff",
-        border: "1px solid rgba(124,58,237,0.12)",
+        border: "1px solid rgba(47,26,122,0.12)",
         borderRadius: "12px",
         p: 2.5,
         mb: 2,
@@ -101,7 +101,7 @@ const FormRow = ({ form, sdkConfig, lanBase, onSaved }) => {
         <Chip
           label={form.attendeeTypeName}
           size="small"
-          sx={{ bgcolor: "rgba(124,58,237,0.1)", color: "#7C3AED", fontWeight: 700, fontSize: "0.8rem" }}
+          sx={{ bgcolor: "rgba(47,26,122,0.1)", color: "#2F1A7A", fontWeight: 700, fontSize: "0.8rem" }}
         />
         {form.isRegistrationPageRequired ? (
           <Chip label="Registration Required" size="small"
@@ -112,11 +112,11 @@ const FormRow = ({ form, sdkConfig, lanBase, onSaved }) => {
         )}
         <Box display="flex" flexDirection="column" alignItems="flex-end" gap={0.5} ml="auto">
           <Box display="flex" alignItems="center" gap={0.5}>
-            <Typography variant="caption" sx={{ color: "#7C3AED", fontFamily: "monospace", fontSize: "0.72rem" }}>
+            <Typography variant="caption" sx={{ color: "#2F1A7A", fontFamily: "monospace", fontSize: "0.72rem" }}>
               {regUrl}
             </Typography>
             <Tooltip title={copied ? "Copied!" : "Copy local URL"}>
-              <IconButton size="small" onClick={copyUrl} sx={{ color: "#7C3AED" }}>
+              <IconButton size="small" onClick={copyUrl} sx={{ color: "#2F1A7A" }}>
                 {copied ? <Check sx={{ fontSize: 14 }} /> : <ContentCopy sx={{ fontSize: 14 }} />}
               </IconButton>
             </Tooltip>
@@ -155,13 +155,13 @@ const FormRow = ({ form, sdkConfig, lanBase, onSaved }) => {
           startIcon={saving ? <CircularProgress size={14} color="inherit" /> : <CloudDownload />}
           sx={{
             borderRadius: "10px",
-            background: "linear-gradient(135deg, #7C3AED, #A78BFA)",
+            background: "linear-gradient(135deg, #2F1A7A, #6B4FC8)",
             fontWeight: 600,
             textTransform: "none",
             whiteSpace: "nowrap",
             flexShrink: 0,
             mt: 0.25,
-            "&:hover": { background: "linear-gradient(135deg, #6D28D9, #9775FA)" },
+            "&:hover": { background: "linear-gradient(135deg, #231460, #9775FA)" },
           }}
         >
           {saving ? "Saving…" : sdkConfig ? "Update SDK" : "Save & Download"}
@@ -233,13 +233,13 @@ const RegistrationsConfig = () => {
         <Box
           sx={{
             bgcolor: "#fff",
-            border: "1px dashed rgba(124,58,237,0.2)",
+            border: "1px dashed rgba(47,26,122,0.2)",
             borderRadius: "12px",
             p: 6,
             textAlign: "center",
           }}
         >
-          <AppRegistration sx={{ fontSize: 40, color: "rgba(124,58,237,0.25)", mb: 1 }} />
+          <AppRegistration sx={{ fontSize: 40, color: "rgba(47,26,122,0.25)", mb: 1 }} />
           <Typography variant="body2" sx={{ color: "#9CA3AF", mb: 2 }}>
             No registration forms loaded yet.
           </Typography>
@@ -248,11 +248,11 @@ const RegistrationsConfig = () => {
             onClick={() => navigate("/app/settings")}
             sx={{
               borderRadius: "10px",
-              borderColor: "rgba(124,58,237,0.3)",
-              color: "#7C3AED",
+              borderColor: "rgba(47,26,122,0.3)",
+              color: "#2F1A7A",
               fontWeight: 600,
               textTransform: "none",
-              "&:hover": { borderColor: "#7C3AED", bgcolor: "rgba(124,58,237,0.06)" },
+              "&:hover": { borderColor: "#2F1A7A", bgcolor: "rgba(47,26,122,0.06)" },
             }}
           >
             Go to Settings to Pull Forms

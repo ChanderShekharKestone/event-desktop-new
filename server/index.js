@@ -48,6 +48,10 @@ app.use("/sdk-files", express.static(SDK_FILES_DIR));
 const BUILD_DIR = path.join(__dirname, "../build");
 app.use(express.static(BUILD_DIR));
 
+// Serve public folder (widget.js etc.)
+const PUBLIC_DIR = path.join(__dirname, "../public");
+app.use(express.static(PUBLIC_DIR));
+
 // Routes
 app.use("/api/activation", require("./routes/activation"));
 app.use("/api/registrations", require("./routes/registrations"));
@@ -58,6 +62,7 @@ app.use("/api/badge-templates", require("./routes/badgeTemplates"));
 app.use("/api/app-settings", require("./routes/appSettings"));
 app.use("/api/sdk-configs", require("./routes/sdkConfigs"));
 app.use("/api/registration-fields", require("./routes/registrationFields"));
+app.use("/api/seed", require("./routes/seed"));
 
 // Health check
 app.get("/api/health", (_req, res) => res.json({ status: 200, message: "OK" }));

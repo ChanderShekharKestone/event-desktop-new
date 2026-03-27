@@ -11,7 +11,7 @@ const useTheme = () => {
         palette: {
           mode: themeMode,
           primary: {
-            main: "#7C3AED",
+            main: "#2F1A7A",
           },
           secondary: {
             main: "#1E1033",

@@ -1,0 +1,112 @@
+revert it because of it will comes from based attendee type that we will fetch from cloud. their maybe different type of attendee type for ex it could be staff, multitaking satff, xyz etc...
+
+# ── CURL COMMANDS ──────────────────────────────────────────────────────────────
+
+# ── SEED ───────────────────────────────────────────────────────────────────────
+
+# Seed 1000 fake registrations
+curl -X POST http://localhost:4001/api/seed
+
+# Seed custom count (e.g. 500)
+curl -X POST http://localhost:4001/api/seed -H "Content-Type: application/json" -d '{"count": 500}'
+
+# Delete only seeded registrations
+curl -X DELETE http://localhost:4001/api/seed
+
+# Delete ALL data for current event (registrations, types, templates, forms, sync)
+curl -X DELETE http://localhost:4001/api/seed/event
+
+# ── ATTENDEE TYPES ─────────────────────────────────────────────────────────────
+
+# Get locally stored attendee types
+curl http://localhost:4001/api/attendee-types
+
+# Pull attendee types from cloud
+curl -X POST http://localhost:4001/api/attendee-types/pull
+
+# ── BADGE TEMPLATES ────────────────────────────────────────────────────────────
+
+# Get locally stored badge templates
+curl http://localhost:4001/api/badge-templates
+
+# Pull badge templates from cloud
+curl -X POST http://localhost:4001/api/badge-templates/pull
+
+# ── REGISTRATION FIELDS ────────────────────────────────────────────────────────
+
+# Get all registration forms
+curl http://localhost:4001/api/registration-fields
+
+# Get form by attendee type (includes attendeeTypes array)
+curl http://localhost:4001/api/registration-fields/by-type/attendee
+
+# Pull registration forms from cloud
+curl -X POST http://localhost:4001/api/registration-fields/pull
+
+# ── REGISTRATIONS ──────────────────────────────────────────────────────────────
+
+# Get paginated registrations (default page 1, limit 25)
+curl http://localhost:4001/api/registrations
+
+# With pagination, search, sort, type filter
+curl "http://localhost:4001/api/registrations?page=1&limit=25&search=rahul&sort=createdAt&order=desc&type=attendee"
+
+# Get stats (total, checkedIn, byType)
+curl http://localhost:4001/api/registrations/stats
+
+# Create a new registration
+curl -X POST http://localhost:4001/api/registrations \
+  -H "Content-Type: application/json" \
+  -d '{"firstName":"Rahul","lastName":"Sharma","email":"rahul.sharma@example.com","mobile":"9876543210","organization":"Infosys","designation":"Engineer","attendeeType":"attendee","campaignSource":"website","termsAndCondn":true}'
+
+# Update a registration by local id
+curl -X PUT http://localhost:4001/api/registrations/1 \
+  -H "Content-Type: application/json" \
+  -d '{"isPrintClicked": true}'
+
+# ── SYNC ───────────────────────────────────────────────────────────────────────
+
+# Pull registrations from cloud
+curl -X POST http://localhost:4001/api/sync/pull
+
+# Push local changes to cloud
+curl -X POST http://localhost:4001/api/sync/push
+
+# Get pending push count
+curl http://localhost:4001/api/sync/pending-count
+
+# ── SCAN / CHECK-IN ────────────────────────────────────────────────────────────
+
+# Check in by cloudId (QR scan)
+curl -X POST http://localhost:4001/api/scan/checkin \
+  -H "Content-Type: application/json" \
+  -d '{"id":"CLOUD_ID_HERE","checkedInTime":"2026-03-26T10:00:00.000Z","isPrintClicked":false}'
+
+# Check in by email
+curl -X POST http://localhost:4001/api/scan/search \
+  -H "Content-Type: application/json" \
+  -d '{"email":"rahul.sharma@example.com","checkedInTime":"2026-03-26T10:00:00.000Z","isPrintClicked":false}'
+
+# ── ACTIVATION ─────────────────────────────────────────────────────────────────
+
+# Check activation status
+curl http://localhost:4001/api/activation
+
+# Activate with key
+curl -X POST http://localhost:4001/api/activation \
+  -H "Content-Type: application/json" \
+  -d '{"activationKey":"YOUR-KEY-HERE"}'
+
+# Reset activation
+curl -X DELETE http://localhost:4001/api/activation
+
+# Get machine ID
+curl http://localhost:4001/api/activation/machine-id
+
+# ── APP SETTINGS ───────────────────────────────────────────────────────────────
+
+# Get LAN URL (for kiosk)
+curl http://localhost:4001/api/app-settings/lan-url
+
+# Health check
+curl http://localhost:4001/api/health

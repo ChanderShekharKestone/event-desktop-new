@@ -2,12 +2,8 @@ const { db } = require("../db");
 
 function upsertAttendeeTypes(types) {
   const stmt = db.prepare(
-    `INSERT INTO attendee_types (cloud_id, event_id, name, display_name, is_active, can_be_deleted, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(cloud_id) DO UPDATE SET
-       display_name  = excluded.display_name,
-       is_active     = excluded.is_active,
-       updated_at    = excluded.updated_at`
+    `INSERT OR REPLACE INTO attendee_types (cloud_id, event_id, name, display_name, is_active, can_be_deleted, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
   const upsertMany = db.transaction((rows) => {

@@ -1,65 +1,112 @@
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
-import {
-  Box, Typography, Grid, Paper, LinearProgress, Chip, Skeleton,
-} from "@mui/material";
-import {
-  People, HowToReg, PersonOff, Sync, TrendingUp,
-} from "@mui/icons-material";
+import { Box, Typography, LinearProgress, Skeleton, Chip } from "@mui/material";
+import { TrendingUp, AccessTime } from "@mui/icons-material";
 import useApi from "../../hooks/useApi";
 import keyNames from "../../keyName";
 import { apiRegistrationStats, apiSyncPendingCount, method } from "../../apiPath";
 
 const TYPE_COLORS = {
-  attendee: { bg: "#EDE9FE", bar: "#7C3AED", text: "#6D28D9" },
-  speaker:  { bg: "#DBEAFE", bar: "#2563EB", text: "#1D4ED8" },
-  sponsor:  { bg: "#FEF3C7", bar: "#D97706", text: "#B45309" },
-  delegate: { bg: "#D1FAE5", bar: "#059669", text: "#065F46" },
-  vip:      { bg: "#FCE7F3", bar: "#DB2777", text: "#9D174D" },
+  attendee: { from: "#2F1A7A", to: "#6B4FC8", text: "#2F1A7A", soft: "#F0EEFF" },
+  speaker:  { from: "#2563EB", to: "#60A5FA", text: "#2563EB", soft: "#EFF6FF" },
+  sponsor:  { from: "#D97706", to: "#FCD34D", text: "#D97706", soft: "#FFFBEB" },
+  delegate: { from: "#059669", to: "#34D399", text: "#059669", soft: "#ECFDF5" },
+  vip:      { from: "#DB2777", to: "#F472B6", text: "#DB2777", soft: "#FDF2F8" },
 };
-const fallback = { bg: "#F3F4F6", bar: "#6B7280", text: "#374151" };
+const fallback = { from: "#6B7280", to: "#9CA3AF", text: "#6B7280", soft: "#F9FAFB" };
 
-function StatCard({ icon, label, value, sub, accent, light, loading }) {
+const STATS = (stats, pendingVal, checkInRate) => [
+  { label: "Registered",   value: stats?.total?.toLocaleString(),        sub: null,              color: "#2F1A7A" },
+  { label: "Checked In",   value: stats?.checkedIn?.toLocaleString(),    sub: `${checkInRate}% rate`, color: "#059669" },
+  { label: "Not Arrived",  value: stats?.notCheckedIn?.toLocaleString(), sub: null,              color: "#DC2626" },
+  { label: "Pending Sync", value: String(pendingVal),                    sub: "awaiting push",   color: "#2563EB" },
+];
+
+function StatCard({ label, value, sub, color, loading }) {
   return (
-    <Paper elevation={0} sx={{
-      p: 2.5,
-      borderRadius: "14px",
-      background: light,
-      border: `1px solid ${accent}22`,
-      height: "100%",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between",
-      minHeight: 110,
-    }}>
-      <Box display="flex" alignItems="center" justifyContent="space-between">
-        <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: "0.1em" }}>
-          {label}
-        </Typography>
-        <Box sx={{ opacity: 0.75 }}>{icon}</Box>
-      </Box>
-      {loading ? (
-        <Skeleton variant="text" width={80} height={48} sx={{ bgcolor: `${accent}22` }} />
-      ) : (
-        <Box>
-          <Typography sx={{ fontSize: "2rem", fontWeight: 900, color: "#0F0A1E", lineHeight: 1 }}>
+    <Box
+      sx={{
+        flex: "1 1 0",
+        bgcolor: "#fff",
+        border: "1px solid rgba(47,26,122,0.1)",
+        borderRadius: "12px",
+        px: 2.5,
+        py: 2,
+        display: "flex",
+        alignItems: "center",
+        gap: 2,
+      }}
+    >
+      <Box
+        sx={{
+          width: 48,
+          height: 48,
+          borderRadius: "10px",
+          bgcolor: `${color}18`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        {loading ? (
+          <Skeleton width={28} height={28} />
+        ) : (
+          <Typography sx={{ fontSize: 22, fontWeight: 800, color, lineHeight: 1 }}>
             {value ?? "—"}
           </Typography>
-          {sub && (
-            <Typography sx={{ fontSize: "0.7rem", color: accent, mt: 0.3, fontWeight: 600 }}>
-              {sub}
-            </Typography>
-          )}
+        )}
+      </Box>
+      <Box>
+        <Typography sx={{ fontSize: 13, fontWeight: 500, color: "#6B7280", lineHeight: 1.3 }}>
+          {label}
+        </Typography>
+        {sub && (
+          <Typography sx={{ fontSize: 11, fontWeight: 600, color, mt: 0.4 }}>
+            {sub}
+          </Typography>
+        )}
+      </Box>
+    </Box>
+  );
+}
+
+function TypeRow({ row }) {
+  const c = TYPE_COLORS[row.type] || fallback;
+  const rate = row.total > 0 ? Math.round((row.checkedIn / row.total) * 100) : 0;
+  return (
+    <Box>
+      <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.9}>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Box sx={{ width: 8, height: 8, borderRadius: "50%", background: `linear-gradient(135deg,${c.from},${c.to})`, flexShrink: 0 }} />
+          <Typography sx={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151", textTransform: "capitalize" }}>
+            {row.type}
+          </Typography>
         </Box>
-      )}
-    </Paper>
+        <Box display="flex" alignItems="center" gap={2}>
+          <Typography sx={{ fontSize: "0.72rem", color: "#9CA3AF" }}>
+            {row.checkedIn.toLocaleString()} / {row.total.toLocaleString()}
+          </Typography>
+          <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: c.text, minWidth: 30, textAlign: "right" }}>
+            {rate}%
+          </Typography>
+        </Box>
+      </Box>
+      <LinearProgress
+        variant="determinate"
+        value={rate}
+        sx={{
+          height: 5, borderRadius: 3, bgcolor: c.soft,
+          "& .MuiLinearProgress-bar": { borderRadius: 3, background: `linear-gradient(90deg,${c.from},${c.to})` },
+        }}
+      />
+    </Box>
   );
 }
 
 const Dashboard = () => {
   const hitApi = useApi();
   const { dashboardStats, syncPendingCount, activationData } = useSelector((s) => s.mainReducer);
-
   const stats = dashboardStats;
   const loading = !stats;
 
@@ -74,176 +121,94 @@ const Dashboard = () => {
     : null;
 
   const pendingVal = syncPendingCount?.count ?? syncPendingCount ?? 0;
+  const checkInRate = stats?.checkInRate ?? 0;
 
   return (
-    <Box sx={{ m: -3, bgcolor: "#F8F7FC", minHeight: "100vh" }}>
+    <Box sx={{ m: -3, minHeight: "100vh", bgcolor: "#F5F3FB" }}>
 
       {/* Header */}
-      <Box sx={{
-        px: 3, py: 2.5,
-        bgcolor: "#fff",
-        borderBottom: "1px solid #EDE9FE",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
-        <Box>
-          <Typography sx={{ fontSize: "1.25rem", fontWeight: 800, color: "#0F0A1E", lineHeight: 1.2 }}>
-            Event Dashboard
-          </Typography>
-          <Typography sx={{ fontSize: "0.75rem", color: "#9CA3AF", mt: 0.2 }}>
-            Live overview
-          </Typography>
+      <Box sx={{ px: 3, pt: 3, pb: 2.5, bgcolor: "#fff", borderBottom: "1px solid #EEEBF8" }}>
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box>
+            <Typography sx={{ fontSize: "0.62rem", fontWeight: 700, color: "#6B4FC8", textTransform: "uppercase", letterSpacing: "0.14em", mb: 0.4 }}>
+              Live Overview
+            </Typography>
+            <Typography sx={{ fontSize: "1.3rem", fontWeight: 800, color: "#1A0B3B", letterSpacing: "-0.01em" }}>
+              Event Dashboard
+            </Typography>
+          </Box>
+          {expiryLabel && (
+            <Chip
+              icon={<AccessTime sx={{ fontSize: "11px !important", color: "#D97706 !important" }} />}
+              label={`Expires ${expiryLabel}`}
+              size="small"
+              sx={{ bgcolor: "#FFFBEB", color: "#B45309", fontSize: "0.63rem", fontWeight: 600, border: "1px solid #FDE68A", "& .MuiChip-icon": { ml: "6px" } }}
+            />
+          )}
         </Box>
-        {expiryLabel && (
-          <Chip
-            label={`Expires ${expiryLabel}`}
-            size="small"
-            sx={{ bgcolor: "#FEF3C7", color: "#B45309", fontSize: "0.68rem", fontWeight: 600, border: "1px solid #FDE68A" }}
-          />
-        )}
       </Box>
 
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ p: 2.5, display: "flex", flexDirection: "column", gap: 2.5 }}>
 
-        {/* Stat Cards */}
-        <Grid container spacing={1.5} mb={2}>
-          <Grid item xs={6} md={3}>
-            <StatCard
-              icon={<People sx={{ color: "#7C3AED", fontSize: 20 }} />}
-              label="Total Registered"
-              value={stats?.total?.toLocaleString()}
-              accent="#7C3AED" light="#F5F3FF"
-              loading={loading}
-            />
-          </Grid>
-          <Grid item xs={6} md={3}>
-            <StatCard
-              icon={<HowToReg sx={{ color: "#059669", fontSize: 20 }} />}
-              label="Checked In"
-              value={stats?.checkedIn?.toLocaleString()}
-              sub={stats ? `${stats.checkInRate}% rate` : null}
-              accent="#059669" light="#F0FDF4"
-              loading={loading}
-            />
-          </Grid>
-          <Grid item xs={6} md={3}>
-            <StatCard
-              icon={<PersonOff sx={{ color: "#DC2626", fontSize: 20 }} />}
-              label="Not Checked In"
-              value={stats?.notCheckedIn?.toLocaleString()}
-              accent="#DC2626" light="#FFF1F2"
-              loading={loading}
-            />
-          </Grid>
-          <Grid item xs={6} md={3}>
-            <StatCard
-              icon={<Sync sx={{ color: "#2563EB", fontSize: 20 }} />}
-              label="Pending Sync"
-              value={String(pendingVal)}
-              sub="awaiting cloud push"
-              accent="#2563EB" light="#EFF6FF"
-              loading={false}
-            />
-          </Grid>
-        </Grid>
+        {/* Stat Cards — first */}
+        <Box display="flex" gap={1.5}>
+          {STATS(stats, pendingVal, checkInRate).map((s) => (
+            <StatCard key={s.label} {...s} loading={loading && s.label !== "Pending Sync"} />
+          ))}
+        </Box>
 
         {/* Check-in Progress */}
-        <Paper elevation={0} sx={{
-          p: 2, borderRadius: "14px", mb: 2,
-          border: "1px solid rgba(124,58,237,0.1)",
-          background: "#fff",
-        }}>
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+        <Box sx={{ bgcolor: "#fff", borderRadius: "14px", px: 2.5, py: 2, border: "1px solid #EEEBF8", boxShadow: "0 1px 8px rgba(47,26,122,0.05)" }}>
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.2}>
             <Box display="flex" alignItems="center" gap={0.8}>
-              <TrendingUp sx={{ color: "#7C3AED", fontSize: 17 }} />
-              <Typography sx={{ fontWeight: 700, fontSize: "0.82rem", color: "#111827" }}>Check-in Progress</Typography>
+              <TrendingUp sx={{ color: "#2F1A7A", fontSize: 16 }} />
+              <Typography sx={{ fontSize: "0.76rem", fontWeight: 700, color: "#374151" }}>Check-in Progress</Typography>
             </Box>
-            {loading ? (
-              <Skeleton width={40} height={20} />
-            ) : (
-              <Typography sx={{ fontWeight: 900, fontSize: "1.05rem", color: "#7C3AED" }}>
-                {stats?.checkInRate ?? 0}%
-              </Typography>
-            )}
+            {loading
+              ? <Skeleton width={36} height={22} />
+              : <Typography sx={{ fontSize: "1.2rem", fontWeight: 900, color: "#2F1A7A", letterSpacing: "-0.02em" }}>{checkInRate}%</Typography>
+            }
           </Box>
           <LinearProgress
             variant={loading ? "indeterminate" : "determinate"}
-            value={stats?.checkInRate ?? 0}
+            value={checkInRate}
             sx={{
-              height: 8, borderRadius: 4,
-              bgcolor: "rgba(124,58,237,0.08)",
-              "& .MuiLinearProgress-bar": {
-                borderRadius: 4,
-                background: "linear-gradient(90deg, #7C3AED, #A78BFA)",
-              },
+              height: 6, borderRadius: 3, bgcolor: "#E5DEFF",
+              "& .MuiLinearProgress-bar": { borderRadius: 3, background: "linear-gradient(90deg,#2F1A7A,#6B4FC8)" },
             }}
           />
           {!loading && (
             <Box display="flex" justifyContent="space-between" mt={0.8}>
-              <Typography sx={{ fontSize: "0.68rem", color: "#9CA3AF" }}>{stats?.checkedIn?.toLocaleString()} in</Typography>
-              <Typography sx={{ fontSize: "0.68rem", color: "#9CA3AF" }}>{stats?.notCheckedIn?.toLocaleString()} remaining</Typography>
+              <Typography sx={{ fontSize: "0.65rem", color: "#9CA3AF" }}>{stats?.checkedIn?.toLocaleString()} arrived</Typography>
+              <Typography sx={{ fontSize: "0.65rem", color: "#9CA3AF" }}>{stats?.notCheckedIn?.toLocaleString()} remaining</Typography>
             </Box>
           )}
-        </Paper>
+        </Box>
 
-        {/* By Type */}
-        <Paper elevation={0} sx={{
-          p: 2, borderRadius: "14px",
-          border: "1px solid rgba(124,58,237,0.1)",
-          background: "#fff",
-        }}>
-          <Typography sx={{ fontWeight: 700, fontSize: "0.82rem", color: "#111827", mb: 1.5 }}>
+        {/* Breakdown by Type */}
+        <Box sx={{ bgcolor: "#fff", borderRadius: "14px", p: 2.5, border: "1px solid #EEEBF8" }}>
+          <Typography sx={{ fontWeight: 700, fontSize: "0.85rem", color: "#1A0B3B", mb: 2 }}>
             Breakdown by Type
           </Typography>
-
           {loading ? (
-            <Grid container spacing={1}>
-              {[1, 2, 3, 4].map((i) => (
-                <Grid item xs={6} key={i}>
-                  <Skeleton height={68} sx={{ borderRadius: 2 }} />
-                </Grid>
+            <Box display="flex" flexDirection="column" gap={2.5}>
+              {[1, 2, 3].map((i) => (
+                <Box key={i}>
+                  <Box display="flex" justifyContent="space-between" mb={0.9}><Skeleton width={80} height={14} /><Skeleton width={40} height={14} /></Box>
+                  <Skeleton height={5} sx={{ borderRadius: 3 }} />
+                </Box>
               ))}
-            </Grid>
+            </Box>
           ) : stats?.byType?.length ? (
-            <Grid container spacing={1.5}>
-              {stats.byType.map((row) => {
-                const c = TYPE_COLORS[row.type] || fallback;
-                const rate = row.total > 0 ? Math.round((row.checkedIn / row.total) * 100) : 0;
-                return (
-                  <Grid item xs={12} sm={6} key={row.type}>
-                    <Box sx={{ p: 1.5, borderRadius: "10px", background: c.bg }}>
-                      <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.8}>
-                        <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: c.text, textTransform: "capitalize" }}>
-                          {row.type}
-                        </Typography>
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Typography sx={{ fontSize: "0.68rem", color: c.text, opacity: 0.7 }}>
-                            {row.checkedIn}/{row.total}
-                          </Typography>
-                          <Typography sx={{ fontSize: "0.75rem", fontWeight: 800, color: c.text }}>
-                            {rate}%
-                          </Typography>
-                        </Box>
-                      </Box>
-                      <LinearProgress
-                        variant="determinate"
-                        value={rate}
-                        sx={{
-                          height: 5, borderRadius: 3,
-                          bgcolor: "rgba(255,255,255,0.5)",
-                          "& .MuiLinearProgress-bar": { borderRadius: 3, bgcolor: c.bar },
-                        }}
-                      />
-                    </Box>
-                  </Grid>
-                );
-              })}
-            </Grid>
+            <Box display="flex" flexDirection="column" gap={2.5}>
+              {stats.byType.map((row) => <TypeRow key={row.type} row={row} />)}
+            </Box>
           ) : (
-            <Typography sx={{ fontSize: "0.78rem", color: "#9CA3AF", textAlign: "center", py: 2 }}>
-              No data yet
-            </Typography>
+            <Box textAlign="center" py={3}>
+              <Typography sx={{ fontSize: "0.8rem", color: "#C4B5FD" }}>No data yet</Typography>
+            </Box>
           )}
-        </Paper>
+        </Box>
 
       </Box>
     </Box>

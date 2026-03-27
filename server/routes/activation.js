@@ -22,10 +22,12 @@ async function getMachineId() {
 }
 
 function saveEventId(eventId) {
-  db.prepare(
-    `INSERT INTO app_settings (key, value) VALUES (?, ?)
-     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
-  ).run("eventId", String(eventId));
+  const exists = db.prepare(`SELECT 1 FROM app_settings WHERE key = 'eventId'`).get();
+  if (exists) {
+    db.prepare(`UPDATE app_settings SET value = ? WHERE key = 'eventId'`).run(String(eventId));
+  } else {
+    db.prepare(`INSERT INTO app_settings (key, value) VALUES ('eventId', ?)`).run(String(eventId));
+  }
 }
 
 // GET /api/activation — check status

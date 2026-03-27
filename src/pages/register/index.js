@@ -32,7 +32,7 @@ const Register = () => {
         formId,
         props: {
           // debug: true,
-          successRedirect: "/thank-you",
+          // successRedirect: "/thank-you",
           getForm: `${apiBase}/api/registration-fields/by-type/${type}`,
           submitForm: `${apiBase}/api/registrations`,
         },
@@ -57,7 +57,9 @@ const Register = () => {
     // Fetch SDK config and registration form in parallel
     Promise.all([
       fetch(`${apiBase}/api/sdk-configs`).then((r) => r.json()),
-      fetch(`${apiBase}/api/registration-fields/by-type/${type}`).then((r) => r.json()),
+      fetch(`${apiBase}/api/registration-fields/by-type/${type}`).then((r) =>
+        r.json(),
+      ),
     ])
       .then(([sdkRes, formRes]) => {
         const config = (sdkRes.data || []).find((s) => s.type === type);

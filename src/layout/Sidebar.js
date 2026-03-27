@@ -12,7 +12,7 @@ import { apiActivation, method } from "../apiPath";
 import useApiNew from "../hooks/useApi";
 import keyNames from "../keyName";
 
-const ACCENT = "#7C3AED";
+const ACCENT = "#2F1A7A";
 
 const sections = [
   {
@@ -24,7 +24,7 @@ const sections = [
   },
   {
     label: "Management",
-    color: "#A78BFA",
+    color: "#6B4FC8",
     items: [
       { label: "Delegates", link: "/app/delegates", icon: People },
       { label: "Registrations", link: "/app/registrations", icon: AppRegistration },
@@ -32,7 +32,7 @@ const sections = [
   },
   {
     label: "Operations",
-    color: "#A78BFA",
+    color: "#6B4FC8",
     items: [
       { label: "Scan & Print", link: "/app/scan-print", icon: Print },
       { label: "Settings", link: "/app/settings", icon: Settings },
@@ -62,14 +62,14 @@ const NavItem = ({ label, link, icon: Icon, exact }) => {
             ? "3px solid rgba(255,255,255,0.45)"
             : "3px solid transparent",
           background: isActive
-            ? "linear-gradient(90deg, rgba(124,58,237,0.82), rgba(167,139,250,0.56))"
+            ? "linear-gradient(90deg, rgba(47,26,122,0.82), rgba(107,79,200,0.56))"
             : "transparent",
           cursor: "pointer",
           transition: "all 0.15s",
           "&:hover": !isActive
             ? {
-                background: "rgba(124,58,237,0.1)",
-                borderLeftColor: "rgba(124,58,237,0.35)",
+                background: "rgba(47,26,122,0.1)",
+                borderLeftColor: "rgba(47,26,122,0.35)",
               }
             : {},
         }}
@@ -206,7 +206,7 @@ const AdminSidebar = ({ open }) => {
         sx={{
           height: 3,
           flexShrink: 0,
-          background: `linear-gradient(90deg, #7C3AED, #A78BFA, #7C3AED)`,
+          background: `linear-gradient(90deg, #2F1A7A, #6B4FC8, #2F1A7A)`,
         }}
       />
     </Box>

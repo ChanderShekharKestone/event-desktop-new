@@ -1,5 +1,4 @@
 const { db } = require("../db");
-const { addToQueue } = require("./syncQueue");
 const { addPending } = require("./pushPending");
 
 function insertRegistration(data) {
@@ -49,13 +48,14 @@ function insertRegistration(data) {
       timestamp,
     );
 
+  const localId = result.lastInsertRowid;
   const user = rowToObject({
     ...result,
-    id: result.lastInsertRowid,
+    id: localId,
     timestamp,
     ...data,
   });
-  addToQueue("create_registration", user);
+  addPending(localId, user.eventId || "");
   return user;
 }
 
@@ -92,8 +92,8 @@ function rowToObject(r) {
     primeMember: Boolean(r.primeMember),
     termsAndCondn: Boolean(r.termsAndCondn),
     isPrintClicked: Boolean(r.isPrintClicked),
-    areaOfInterest: JSON.parse(r.areaOfInterest ?? "[]"),
-    customfields: r.customfields ? JSON.parse(r.customfields) : null,
+    areaOfInterest: (() => { try { return JSON.parse(r.areaOfInterest || "[]"); } catch { return []; } })(),
+    customfields: (() => { try { return r.customfields ? JSON.parse(r.customfields) : null; } catch { return null; } })(),
     createdAt: r.timestamp,
     updatedAt: r.timestamp,
   };
@@ -106,6 +106,7 @@ function getRegistrationsPaginated({
   sort = "timestamp",
   order = "desc",
   eventId = null,
+  type = "",
 }) {
   const columnMap = {
     firstName: "firstName",
@@ -129,6 +130,11 @@ function getRegistrationsPaginated({
   if (eventId) {
     conditions.push("eventId = ?");
     params.push(eventId);
+  }
+
+  if (type) {
+    conditions.push("type = ?");
+    params.push(type);
   }
 
   if (search.trim()) {

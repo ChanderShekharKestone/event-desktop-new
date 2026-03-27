@@ -2,24 +2,12 @@ const { db } = require("../db");
 
 function upsertRegistrationForms(forms) {
   const stmt = db.prepare(
-    `INSERT INTO registration_forms (
+    `INSERT OR REPLACE INTO registration_forms (
       cloud_id, event_id, attendee_type_name, type,
       is_registration_page_required, no_registration_email, no_email_for_event,
       page_section, is_enable_before, confirmation_pass_required,
       custom_fields, attendee_types, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(cloud_id) DO UPDATE SET
-      attendee_type_name            = excluded.attendee_type_name,
-      type                          = excluded.type,
-      is_registration_page_required = excluded.is_registration_page_required,
-      no_registration_email         = excluded.no_registration_email,
-      no_email_for_event            = excluded.no_email_for_event,
-      page_section                  = excluded.page_section,
-      is_enable_before              = excluded.is_enable_before,
-      confirmation_pass_required    = excluded.confirmation_pass_required,
-      custom_fields                 = excluded.custom_fields,
-      attendee_types                = excluded.attendee_types,
-      updated_at                    = excluded.updated_at`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
 
   const upsertMany = db.transaction((rows) => {

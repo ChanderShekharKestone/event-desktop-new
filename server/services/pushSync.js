@@ -33,6 +33,7 @@ async function pushLocalChanges() {
 
       if (!row.cloudId) {
         // New local registration — POST to create on cloud
+        console.log("[pushSync] POST new registration:", JSON.stringify({ ...payload, eventId: row.eventId }, null, 2));
         const response = await axios.post(
           API,
           { ...payload, eventId: row.eventId },
@@ -42,6 +43,7 @@ async function pushLocalChanges() {
         if (newCloudId) updateCloudId(item.registration_id, newCloudId);
       } else {
         // Existing registration — PUT to update
+        console.log("[pushSync] PUT update registration:", row.cloudId, JSON.stringify(payload, null, 2));
         await axios.put(`${API}/${row.cloudId}`, payload, {
           headers: CLOUD_HEADERS,
         });

@@ -2,17 +2,8 @@ const { db } = require("../db");
 
 function upsertBadgeTemplates(templates) {
   const stmt = db.prepare(
-    `INSERT INTO badge_templates (cloud_id, event_id, name, type, width, height, bg_img, font_family, elements, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(cloud_id) DO UPDATE SET
-       name       = excluded.name,
-       type       = excluded.type,
-       width      = excluded.width,
-       height     = excluded.height,
-       bg_img     = excluded.bg_img,
-       font_family= excluded.font_family,
-       elements   = excluded.elements,
-       updated_at = excluded.updated_at`
+    `INSERT OR REPLACE INTO badge_templates (cloud_id, event_id, name, type, width, height, bg_img, font_family, elements, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
   const upsertMany = db.transaction((rows) => {
