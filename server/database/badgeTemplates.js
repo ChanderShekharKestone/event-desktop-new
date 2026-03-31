@@ -2,8 +2,8 @@ const { db } = require("../db");
 
 function upsertBadgeTemplates(templates) {
   const stmt = db.prepare(
-    `INSERT OR REPLACE INTO badge_templates (cloud_id, event_id, name, type, width, height, bg_img, font_family, elements, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT OR REPLACE INTO badge_templates (cloud_id, event_id, name, type, width, height, bg_img, font_family, elements, alignment, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
   const upsertMany = db.transaction((rows) => {
@@ -18,6 +18,7 @@ function upsertBadgeTemplates(templates) {
         r.bgImg || "",
         r.fontFamily || "Arial",
         JSON.stringify(r.elements || []),
+        r.alignment || "center",
         r.createdAt,
         r.updatedAt
       );
@@ -39,6 +40,7 @@ function getBadgeTemplates(eventId = null) {
     bgImg: r.bg_img,
     fontFamily: r.font_family,
     elements: JSON.parse(r.elements || "[]"),
+    alignment: r.alignment || "center",
     eventId: r.event_id,
     createdAt: r.created_at,
     updatedAt: r.updated_at,

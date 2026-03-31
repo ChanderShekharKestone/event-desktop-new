@@ -107,6 +107,9 @@ function getRegistrationsPaginated({
   order = "desc",
   eventId = null,
   type = "",
+  isCheckedIn = "",
+  campaignSource = "",
+  isPrintClicked = "",
 }) {
   const columnMap = {
     firstName: "firstName",
@@ -135,6 +138,25 @@ function getRegistrationsPaginated({
   if (type) {
     conditions.push("type = ?");
     params.push(type);
+  }
+
+  if (isCheckedIn !== "") {
+    conditions.push("isCheckedIn = ?");
+    params.push(isCheckedIn === "1" ? 1 : 0);
+  }
+
+  if (campaignSource) {
+    if (campaignSource === "__direct__") {
+      conditions.push("(campaignSource IS NULL OR campaignSource = '')");
+    } else {
+      conditions.push("campaignSource = ?");
+      params.push(campaignSource);
+    }
+  }
+
+  if (isPrintClicked !== "") {
+    conditions.push("isPrintClicked = ?");
+    params.push(isPrintClicked === "1" ? 1 : 0);
   }
 
   if (search.trim()) {

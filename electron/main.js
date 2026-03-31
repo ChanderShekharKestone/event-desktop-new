@@ -27,7 +27,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1000,
     height: 700,
-    icon: path.join(__dirname, "../public/favicon.ico"),
+    icon: path.join(__dirname, process.platform === "darwin" ? "../public/icon.icns" : "../public/icon.ico"),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,

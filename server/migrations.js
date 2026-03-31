@@ -297,6 +297,20 @@ function runMigrations() {
     )`,
   ).run();
 
+  // Add alignment column to badge_templates if missing
+  {
+    const cols = db.prepare("PRAGMA table_info(badge_templates)").all().map((c) => c.name);
+    if (!cols.includes("alignment")) {
+      db.prepare(`ALTER TABLE badge_templates ADD COLUMN alignment TEXT DEFAULT 'center'`).run();
+      // Set the first 3 rows to left / center / right for local testing
+      const rows = db.prepare(`SELECT id FROM badge_templates ORDER BY id ASC LIMIT 3`).all();
+      const alignments = ["left", "center", "right"];
+      rows.forEach((row, i) => {
+        db.prepare(`UPDATE badge_templates SET alignment = ? WHERE id = ?`).run(alignments[i], row.id);
+      });
+    }
+  }
+
   // Migrate badge_templates: if global cloud_id UNIQUE exists, recreate with composite key
   {
     const btIndexes = db.prepare("PRAGMA index_list(badge_templates)").all();

@@ -64,8 +64,8 @@
     "wait-on": "^9.0.4"
   },
   "build": {
-    "appId": "com.registration.app",
-    "productName": "Registration System",
+    "appId": "com.vosmos.eventdesk",
+    "productName": "Vosmos Event",
     "asar": true,
     "asarUnpack": [
       "**/node_modules/better-sqlite3/**",
@@ -87,10 +87,12 @@
       "main": "electron/main.js"
     },
     "mac": {
-      "target": "dmg"
+      "target": "dmg",
+      "icon": "public/icon.icns"
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "public/icon.ico"
     }
   }
 }

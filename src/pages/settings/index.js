@@ -40,16 +40,16 @@ const SyncButton = ({ label, icon: Icon, onClick, loading, disabled }) => (
     onClick={onClick}
     disabled={loading || disabled}
     sx={{
-      borderColor: "rgba(47,26,122,0.3)",
-      color: "#2F1A7A",
+      borderColor: "rgba(32,23,81,0.3)",
+      color: "#201751",
       borderRadius: "10px",
       px: 3,
       py: 1.25,
       fontWeight: 600,
       textTransform: "none",
       "&:hover": {
-        borderColor: "#2F1A7A",
-        bgcolor: "rgba(47,26,122,0.06)",
+        borderColor: "#201751",
+        bgcolor: "rgba(32,23,81,0.06)",
       },
     }}
   >
@@ -144,7 +144,7 @@ const Settings = () => {
       <Typography
         variant="h5"
         fontWeight={700}
-        sx={{ color: "#1E1033", mb: 3 }}
+        sx={{ color: "#201751", mb: 3 }}
       >
         Settings
       </Typography>
@@ -153,14 +153,14 @@ const Settings = () => {
         sx={{
           bgcolor: "#fff",
           borderRadius: "12px",
-          border: "1px solid rgba(47,26,122,0.12)",
+          border: "1px solid rgba(32,23,81,0.12)",
           p: 3,
         }}
       >
         <Typography
           variant="subtitle1"
           fontWeight={700}
-          sx={{ color: "#1E1033", mb: 0.5 }}
+          sx={{ color: "#201751", mb: 0.5 }}
         >
           Sync
         </Typography>
@@ -168,7 +168,7 @@ const Settings = () => {
           Pull latest registrations from cloud or push local changes. Auto-sync
           runs every 5 min (pull) and 2 min (push).
         </Typography>
-        <Divider sx={{ mb: 2.5, borderColor: "rgba(47,26,122,0.08)" }} />
+        <Divider sx={{ mb: 2.5, borderColor: "rgba(32,23,81,0.08)" }} />
         <Box display="flex" gap={2}>
           <Tooltip
             title={
@@ -202,7 +202,7 @@ const Settings = () => {
         sx={{
           bgcolor: "#fff",
           borderRadius: "12px",
-          border: "1px solid rgba(47,26,122,0.12)",
+          border: "1px solid rgba(32,23,81,0.12)",
           p: 3,
           mt: 3,
         }}
@@ -210,7 +210,7 @@ const Settings = () => {
         <Typography
           variant="subtitle1"
           fontWeight={700}
-          sx={{ color: "#1E1033", mb: 0.5 }}
+          sx={{ color: "#201751", mb: 0.5 }}
         >
           Attendee Types
         </Typography>
@@ -218,7 +218,7 @@ const Settings = () => {
           Pull the latest attendee role types from cloud. Reflects any changes
           made on cloud immediately.
         </Typography>
-        <Divider sx={{ mb: 2.5, borderColor: "rgba(47,26,122,0.08)" }} />
+        <Divider sx={{ mb: 2.5, borderColor: "rgba(32,23,81,0.08)" }} />
         <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
           <SyncButton
             label="Pull Attendee Types"
@@ -240,8 +240,8 @@ const Settings = () => {
               label={t.displayName}
               size="small"
               sx={{
-                bgcolor: "rgba(47,26,122,0.08)",
-                color: "#2F1A7A",
+                bgcolor: "rgba(32,23,81,0.08)",
+                color: "#201751",
                 fontWeight: 600,
                 fontSize: "0.75rem",
               }}
@@ -255,7 +255,7 @@ const Settings = () => {
         sx={{
           bgcolor: "#fff",
           borderRadius: "12px",
-          border: "1px solid rgba(47,26,122,0.12)",
+          border: "1px solid rgba(32,23,81,0.12)",
           p: 3,
           mt: 3,
         }}
@@ -263,7 +263,7 @@ const Settings = () => {
         <Typography
           variant="subtitle1"
           fontWeight={700}
-          sx={{ color: "#1E1033", mb: 0.5 }}
+          sx={{ color: "#201751", mb: 0.5 }}
         >
           Badge Templates
         </Typography>
@@ -271,7 +271,7 @@ const Settings = () => {
           Pull badge templates from cloud. These are used to print badges after
           check-in.
         </Typography>
-        <Divider sx={{ mb: 2.5, borderColor: "rgba(47,26,122,0.08)" }} />
+        <Divider sx={{ mb: 2.5, borderColor: "rgba(32,23,81,0.08)" }} />
         <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
           <SyncButton
             label="Pull Badge Templates"
@@ -294,8 +294,8 @@ const Settings = () => {
                 label={t.name}
                 size="small"
                 sx={{
-                  bgcolor: "rgba(47,26,122,0.08)",
-                  color: "#2F1A7A",
+                  bgcolor: "rgba(32,23,81,0.08)",
+                  color: "#201751",
                   fontWeight: 600,
                   fontSize: "0.75rem",
                 }}
@@ -314,21 +314,21 @@ const Settings = () => {
         sx={{
           bgcolor: "#fff",
           borderRadius: "12px",
-          border: "1px solid rgba(47,26,122,0.12)",
+          border: "1px solid rgba(32,23,81,0.12)",
           p: 3,
           mt: 3,
         }}
       >
         <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-          <QrCode2 sx={{ color: "#2F1A7A", fontSize: 20 }} />
-          <Typography variant="subtitle1" fontWeight={700} sx={{ color: "#1E1033" }}>
+          <QrCode2 sx={{ color: "#201751", fontSize: 20 }} />
+          <Typography variant="subtitle1" fontWeight={700} sx={{ color: "#201751" }}>
             Scan Kiosk
           </Typography>
         </Box>
         <Typography variant="body2" sx={{ color: "#6B7280", mb: 2.5 }}>
           Share this link with kiosk devices on the same network to open the scan page.
         </Typography>
-        <Divider sx={{ mb: 2.5, borderColor: "rgba(47,26,122,0.08)" }} />
+        <Divider sx={{ mb: 2.5, borderColor: "rgba(32,23,81,0.08)" }} />
         <OutlinedInput
           readOnly
           fullWidth
@@ -339,15 +339,15 @@ const Settings = () => {
             fontFamily: "monospace",
             fontSize: "0.85rem",
             "& .MuiOutlinedInput-notchedOutline": {
-              borderColor: "rgba(47,26,122,0.25)",
+              borderColor: "rgba(32,23,81,0.25)",
             },
           }}
           endAdornment={
             <InputAdornment position="end">
-              <IconButton onClick={fetchKioskUrl} edge="end" sx={{ color: "#2F1A7A" }}>
+              <IconButton onClick={fetchKioskUrl} edge="end" sx={{ color: "#201751" }}>
                 <Refresh fontSize="small" />
               </IconButton>
-              <IconButton onClick={handleCopy} edge="end" sx={{ color: copied ? "#16A34A" : "#2F1A7A" }}>
+              <IconButton onClick={handleCopy} edge="end" sx={{ color: copied ? "#16A34A" : "#201751" }}>
                 {copied ? <Check fontSize="small" /> : <ContentCopy fontSize="small" />}
               </IconButton>
             </InputAdornment>
@@ -360,18 +360,18 @@ const Settings = () => {
         sx={{
           bgcolor: "#fff",
           borderRadius: "12px",
-          border: "1px solid rgba(47,26,122,0.12)",
+          border: "1px solid rgba(32,23,81,0.12)",
           p: 3,
           mt: 3,
         }}
       >
-        <Typography variant="subtitle1" fontWeight={700} sx={{ color: "#1E1033", mb: 0.5 }}>
+        <Typography variant="subtitle1" fontWeight={700} sx={{ color: "#201751", mb: 0.5 }}>
           Registration Forms
         </Typography>
         <Typography variant="body2" sx={{ color: "#6B7280", mb: 2.5 }}>
           Pull registration form configurations from cloud. Each attendee type can have its own form.
         </Typography>
-        <Divider sx={{ mb: 2.5, borderColor: "rgba(47,26,122,0.08)" }} />
+        <Divider sx={{ mb: 2.5, borderColor: "rgba(32,23,81,0.08)" }} />
         <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
           <SyncButton
             label="Pull Registration Forms"
@@ -389,9 +389,9 @@ const Settings = () => {
                 size="small"
                 sx={{
                   bgcolor: f.isRegistrationPageRequired
-                    ? "rgba(47,26,122,0.08)"
+                    ? "rgba(32,23,81,0.08)"
                     : "rgba(156,163,175,0.15)",
-                  color: f.isRegistrationPageRequired ? "#2F1A7A" : "#6B7280",
+                  color: f.isRegistrationPageRequired ? "#201751" : "#6B7280",
                   fontWeight: 600,
                   fontSize: "0.75rem",
                 }}

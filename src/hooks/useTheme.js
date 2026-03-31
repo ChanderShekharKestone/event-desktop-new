@@ -11,10 +11,10 @@ const useTheme = () => {
         palette: {
           mode: themeMode,
           primary: {
-            main: "#2F1A7A",
+            main: "#201751",
           },
           secondary: {
-            main: "#1E1033",
+            main: "#00CBB3",
           },
         },
         shape: {

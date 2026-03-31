@@ -155,6 +155,9 @@ router.get("/", (req, res) => {
       sort = "createdAt",
       order = "desc",
       type = "",
+      isCheckedIn = "",
+      campaignSource = "",
+      isPrintClicked = "",
     } = req.query;
     const eventId = settings.get("eventId") || null;
     const result = getRegistrationsPaginated({
@@ -165,6 +168,9 @@ router.get("/", (req, res) => {
       order,
       eventId,
       type,
+      isCheckedIn,
+      campaignSource,
+      isPrintClicked,
     });
     res.json({
       status: 200,

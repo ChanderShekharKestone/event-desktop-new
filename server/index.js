@@ -16,7 +16,17 @@ const { syncFromCloud } = require("./services/cloudSync");
 const { pushLocalChanges } = require("./services/pushSync");
 
 const app = express();
+// Determine local IP synchronously so the HTTPS cert SAN can include it
 let localIP = "localhost";
+const nets = os.networkInterfaces();
+for (const name of Object.keys(nets)) {
+  for (const net of nets[name]) {
+    if (net.family === "IPv4" && !net.internal) {
+      localIP = net.address;
+      break;
+    }
+  }
+}
 
 // CORS — allow React dev server and Electron renderer
 // app.use(cors({
@@ -85,22 +95,27 @@ app.get("/api/local-ip", (_req, res) => {
 });
 
 app.listen(PORT, () => {
-  const nets = os.networkInterfaces();
-  for (const name of Object.keys(nets)) {
-    for (const net of nets[name]) {
-      if (net.family === "IPv4" && !net.internal) {
-        localIP = net.address;
-        break;
-      }
-    }
-  }
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`LAN registration URL: http://${localIP}:${PORT}/#/register?type=attendee`);
 });
 
 // HTTPS server for kiosk — browsers require secure context for camera access
-const attrs = [{ name: "commonName", value: "localhost" }];
-const pems = selfsigned.generate(attrs, { days: 365 });
+// SAN (Subject Alternative Name) is required by Chrome 58+; without it the browser
+// raises ERR_SSL_PROTOCOL_ERROR instead of the usual "proceed anyway" warning.
+const attrs = [{ name: "commonName", value: localIP }];
+const pems = selfsigned.generate(attrs, {
+  days: 365,
+  extensions: [
+    {
+      name: "subjectAltName",
+      altNames: [
+        { type: 7, ip: "127.0.0.1" },
+        { type: 7, ip: localIP },
+        { type: 2, value: "localhost" },
+      ],
+    },
+  ],
+});
 https.createServer({ key: pems.private, cert: pems.cert }, app).listen(HTTPS_PORT, () => {
   console.log(`HTTPS server running on https://localhost:${HTTPS_PORT}`);
 });

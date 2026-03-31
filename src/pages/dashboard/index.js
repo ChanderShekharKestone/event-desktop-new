@@ -7,7 +7,7 @@ import keyNames from "../../keyName";
 import { apiRegistrationStats, apiSyncPendingCount, method } from "../../apiPath";
 
 const TYPE_COLORS = {
-  attendee: { from: "#2F1A7A", to: "#6B4FC8", text: "#2F1A7A", soft: "#F0EEFF" },
+  attendee: { from: "#201751", to: "#6B4FC8", text: "#201751", soft: "#F0EEFF" },
   speaker:  { from: "#2563EB", to: "#60A5FA", text: "#2563EB", soft: "#EFF6FF" },
   sponsor:  { from: "#D97706", to: "#FCD34D", text: "#D97706", soft: "#FFFBEB" },
   delegate: { from: "#059669", to: "#34D399", text: "#059669", soft: "#ECFDF5" },
@@ -16,7 +16,7 @@ const TYPE_COLORS = {
 const fallback = { from: "#6B7280", to: "#9CA3AF", text: "#6B7280", soft: "#F9FAFB" };
 
 const STATS = (stats, pendingVal, checkInRate) => [
-  { label: "Registered",   value: stats?.total?.toLocaleString(),        sub: null,              color: "#2F1A7A" },
+  { label: "Registered",   value: stats?.total?.toLocaleString(),        sub: null,              color: "#201751" },
   { label: "Checked In",   value: stats?.checkedIn?.toLocaleString(),    sub: `${checkInRate}% rate`, color: "#059669" },
   { label: "Not Arrived",  value: stats?.notCheckedIn?.toLocaleString(), sub: null,              color: "#DC2626" },
   { label: "Pending Sync", value: String(pendingVal),                    sub: "awaiting push",   color: "#2563EB" },
@@ -28,7 +28,7 @@ function StatCard({ label, value, sub, color, loading }) {
       sx={{
         flex: "1 1 0",
         bgcolor: "#fff",
-        border: "1px solid rgba(47,26,122,0.1)",
+        border: "1px solid rgba(32,23,81,0.1)",
         borderRadius: "12px",
         px: 2.5,
         py: 2,
@@ -158,15 +158,15 @@ const Dashboard = () => {
         </Box>
 
         {/* Check-in Progress */}
-        <Box sx={{ bgcolor: "#fff", borderRadius: "14px", px: 2.5, py: 2, border: "1px solid #EEEBF8", boxShadow: "0 1px 8px rgba(47,26,122,0.05)" }}>
+        <Box sx={{ bgcolor: "#fff", borderRadius: "14px", px: 2.5, py: 2, border: "1px solid #EEEBF8", boxShadow: "0 1px 8px rgba(32,23,81,0.05)" }}>
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.2}>
             <Box display="flex" alignItems="center" gap={0.8}>
-              <TrendingUp sx={{ color: "#2F1A7A", fontSize: 16 }} />
+              <TrendingUp sx={{ color: "#201751", fontSize: 16 }} />
               <Typography sx={{ fontSize: "0.76rem", fontWeight: 700, color: "#374151" }}>Check-in Progress</Typography>
             </Box>
             {loading
               ? <Skeleton width={36} height={22} />
-              : <Typography sx={{ fontSize: "1.2rem", fontWeight: 900, color: "#2F1A7A", letterSpacing: "-0.02em" }}>{checkInRate}%</Typography>
+              : <Typography sx={{ fontSize: "1.2rem", fontWeight: 900, color: "#201751", letterSpacing: "-0.02em" }}>{checkInRate}%</Typography>
             }
           </Box>
           <LinearProgress
@@ -174,7 +174,7 @@ const Dashboard = () => {
             value={checkInRate}
             sx={{
               height: 6, borderRadius: 3, bgcolor: "#E5DEFF",
-              "& .MuiLinearProgress-bar": { borderRadius: 3, background: "linear-gradient(90deg,#2F1A7A,#6B4FC8)" },
+              "& .MuiLinearProgress-bar": { borderRadius: 3, background: "linear-gradient(90deg,#201751,#6B4FC8)" },
             }}
           />
           {!loading && (

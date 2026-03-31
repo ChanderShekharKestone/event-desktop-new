@@ -13,13 +13,25 @@ import {
   Select,
   MenuItem,
   FormControl,
+  ListSubheader,
+  Checkbox,
+  ListItemText,
 } from "@mui/material";
 import { Search, FileDownload, Done, Print } from "@mui/icons-material";
 import { DataGrid, useGridApiRef } from "@mui/x-data-grid";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import useDebounce from "../../hooks/useDebounce";
-import { apiPath, apiGetRegistrations, apiUserScan } from "../../apiPath";
+import useApi from "../../hooks/useApi";
+import {
+  apiPath,
+  apiGetRegistrations,
+  apiUserScan,
+  apiBadgeTemplates,
+  apiAttendeeTypes,
+  method,
+} from "../../apiPath";
+import keyNames from "../../keyName";
 import PrintableBadgeModal from "./PrintableBadgeModal";
 
 function getInitials(firstName = "", lastName = "") {
@@ -27,15 +39,27 @@ function getInitials(firstName = "", lastName = "") {
 }
 
 function avatarColor(name = "") {
-  const colors = ["#2F1A7A", "#0EA5E9", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4"];
+  const colors = [
+    "#201751",
+    "#0EA5E9",
+    "#10B981",
+    "#F59E0B",
+    "#EF4444",
+    "#8B5CF6",
+    "#06B6D4",
+  ];
   let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < name.length; i++)
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
 }
 
 const Delegates = () => {
   const apiRef = useGridApiRef();
-  const { badgeTemplatesData, attendeeTypesData } = useSelector((s) => s.mainReducer);
+  const hitApi = useApi();
+  const { badgeTemplatesData, attendeeTypesData } = useSelector(
+    (s) => s.mainReducer,
+  );
   const attendeeTypes = attendeeTypesData?.data || attendeeTypesData || [];
 
   const [rows, setRows] = useState([]);
@@ -43,8 +67,14 @@ const Delegates = () => {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 25 });
-  const [sortModel, setSortModel] = useState([{ field: "createdAt", sort: "desc" }]);
+  const [filters, setFilters] = useState([]);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 25,
+  });
+  const [sortModel, setSortModel] = useState([
+    { field: "createdAt", sort: "desc" },
+  ]);
   const [exporting, setExporting] = useState(false);
   const [openBadge, setOpenBadge] = useState(null);
   const debouncedSearch = useDebounce(search, 400);
@@ -56,7 +86,20 @@ const Delegates = () => {
       const sort = sortModel[0]?.field || "createdAt";
       const order = sortModel[0]?.sort || "desc";
       const { data } = await axios.get(`${apiPath}${apiGetRegistrations}`, {
-        params: { page: page + 1, limit: pageSize, search: debouncedSearch, sort, order, type: typeFilter },
+        params: {
+          page: page + 1,
+          limit: pageSize,
+          search: debouncedSearch,
+          sort,
+          order,
+          type: typeFilter,
+          isCheckedIn:
+            filters.find((f) => f.startsWith("status:"))?.split(":")[1] ?? "",
+          campaignSource:
+            filters.find((f) => f.startsWith("source:"))?.split(":")[1] ?? "",
+          isPrintClicked:
+            filters.find((f) => f.startsWith("printed:"))?.split(":")[1] ?? "",
+        },
       });
       setRows((data.data || []).map((r, i) => ({ ...r, id: r._id ?? i })));
       setRowCount(data.total || 0);
@@ -65,24 +108,49 @@ const Delegates = () => {
     } finally {
       setLoading(false);
     }
-  }, [paginationModel, sortModel, debouncedSearch, typeFilter]);
+  }, [paginationModel, sortModel, debouncedSearch, typeFilter, filters]);
 
-  useEffect(() => { fetchDelegates(); }, [fetchDelegates]);
-  useEffect(() => { setPaginationModel((prev) => ({ ...prev, page: 0 })); }, [debouncedSearch, typeFilter]);
-
-  const markAttendance = useCallback(async (row) => {
-    try {
-      await axios.post(`${apiPath}${apiUserScan}`, {
-        id: row._id || row.id,
-        isCheckedIn: true,
-        checkedInTime: new Date().toISOString(),
-        isPrintClicked: false,
-      });
-      fetchDelegates();
-    } catch (err) {
-      console.error("Mark attendance failed:", err.message);
-    }
+  useEffect(() => {
+    fetchDelegates();
   }, [fetchDelegates]);
+  useEffect(() => {
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, [debouncedSearch, typeFilter, filters]);
+  useEffect(() => {
+    hitApi(
+      apiBadgeTemplates,
+      null,
+      method.get,
+      keyNames.badgeTemplatesData,
+      null,
+    );
+  }, [hitApi]);
+  useEffect(() => {
+    hitApi(
+      apiAttendeeTypes,
+      null,
+      method.get,
+      keyNames.attendeeTypesData,
+      null,
+    );
+  }, [hitApi]);
+
+  const markAttendance = useCallback(
+    async (row) => {
+      try {
+        await axios.post(`${apiPath}${apiUserScan}`, {
+          id: row._id || row.id,
+          isCheckedIn: true,
+          checkedInTime: new Date().toISOString(),
+          isPrintClicked: false,
+        });
+        fetchDelegates();
+      } catch (err) {
+        console.error("Mark attendance failed:", err.message);
+      }
+    },
+    [fetchDelegates],
+  );
 
   const handleExportAll = useCallback(async () => {
     setExporting(true);
@@ -90,19 +158,47 @@ const Delegates = () => {
       const sort = sortModel[0]?.field || "createdAt";
       const order = sortModel[0]?.sort || "desc";
       const { data } = await axios.get(`${apiPath}${apiGetRegistrations}`, {
-        params: { page: 1, limit: rowCount || 100000, search: debouncedSearch, sort, order },
+        params: {
+          page: 1,
+          limit: rowCount || 100000,
+          search: debouncedSearch,
+          sort,
+          order,
+          type: typeFilter,
+          isCheckedIn: filters.find((f) => f.startsWith("status:"))?.split(":")[1] ?? "",
+          campaignSource: filters.find((f) => f.startsWith("source:"))?.split(":")[1] ?? "",
+          isPrintClicked: filters.find((f) => f.startsWith("printed:"))?.split(":")[1] ?? "",
+        },
       });
       const all = data.data || [];
-      const headers = ["#", "First Name", "Last Name", "Email", "Mobile", "Organization", "Designation", "Checked In", "Registered At"];
+      const headers = [
+        "#",
+        "First Name",
+        "Last Name",
+        "Organization",
+        "Designation",
+        "Checked In",
+        "Registered At",
+      ];
       const csvRows = [
         headers.join(","),
         ...all.map((r, i) =>
-          [i + 1, r.firstName, r.lastName, r.email, r.mobile, r.organization, r.designation, r.isCheckedIn ? "Yes" : "No", r.createdAt ? new Date(r.createdAt).toLocaleString() : ""]
+          [
+            i + 1,
+            r.firstName,
+            r.lastName,
+            r.organization,
+            r.designation,
+            r.isCheckedIn ? "Yes" : "No",
+            r.createdAt ? new Date(r.createdAt).toLocaleString() : "",
+          ]
             .map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`)
-            .join(",")
+            .join(","),
         ),
       ];
-      const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const blob = new Blob([csvRows.join("\n")], {
+        type: "text/csv;charset=utf-8;",
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -114,7 +210,7 @@ const Delegates = () => {
     } finally {
       setExporting(false);
     }
-  }, [rowCount, debouncedSearch, sortModel]);
+  }, [rowCount, debouncedSearch, sortModel, typeFilter, filters]);
 
   const columns = [
     {
@@ -126,7 +222,9 @@ const Delegates = () => {
         const idx = api.getAllRowIds().indexOf(row.id);
         return (
           <Box display="flex" alignItems="center" height="100%">
-            <Typography sx={{ fontSize: 13, color: "#9CA3AF", fontWeight: 500 }}>
+            <Typography
+              sx={{ fontSize: 13, color: "#9CA3AF", fontWeight: 500 }}
+            >
               {paginationModel.page * paginationModel.pageSize + idx + 1}
             </Typography>
           </Box>
@@ -139,12 +237,20 @@ const Delegates = () => {
       width: 130,
       sortable: false,
       renderCell: ({ row }) => (
-        <Box display="flex" flexDirection="column" gap={0.5} justifyContent="center" height="100%">
+        <Box
+          display="flex"
+          flexDirection="column"
+          gap={0.5}
+          justifyContent="center"
+          height="100%"
+        >
           <Chip
             label={row.isCheckedIn ? "Checked In" : "Not Checked In"}
             size="small"
             sx={{
-              bgcolor: row.isCheckedIn ? "rgba(22,163,74,0.08)" : "rgba(239,68,68,0.08)",
+              bgcolor: row.isCheckedIn
+                ? "rgba(22,163,74,0.08)"
+                : "rgba(239,68,68,0.08)",
               color: row.isCheckedIn ? "#16A34A" : "#DC2626",
               fontWeight: 600,
               fontSize: "0.7rem",
@@ -166,19 +272,31 @@ const Delegates = () => {
         const color = avatarColor(name);
         return (
           <Box display="flex" alignItems="center" gap={1.5} height="100%">
-            <Avatar sx={{ width: 34, height: 34, bgcolor: color, fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+            <Avatar
+              sx={{
+                width: 34,
+                height: 34,
+                bgcolor: color,
+                fontSize: 13,
+                fontWeight: 700,
+                flexShrink: 0,
+              }}
+            >
               {getInitials(row.firstName, row.lastName)}
             </Avatar>
             <Box minWidth={0}>
-              <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <Typography
+                sx={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#111827",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
                 {name || "—"}
               </Typography>
-              <Typography sx={{ fontSize: 12, color: "#6B7280", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {row.email}
-              </Typography>
-              {row.mobile && (
-                <Typography sx={{ fontSize: 11, color: "#9CA3AF" }}>{row.mobile}</Typography>
-              )}
             </Box>
           </Box>
         );
@@ -190,16 +308,32 @@ const Delegates = () => {
       width: 180,
       sortable: false,
       renderCell: ({ row }) => (
-        <Box display="flex" flexDirection="column" justifyContent="center" height="100%" gap={0.3}>
+        <Box
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          height="100%"
+          gap={0.3}
+        >
           {row.organization && (
             <Typography sx={{ fontSize: 12, color: "#374151" }}>
-              <Typography component="span" sx={{ fontSize: 11, color: "#9CA3AF", mr: 0.5 }}>Org:</Typography>
+              <Typography
+                component="span"
+                sx={{ fontSize: 11, color: "#9CA3AF", mr: 0.5 }}
+              >
+                Org:
+              </Typography>
               {row.organization}
             </Typography>
           )}
           {row.designation && (
             <Typography sx={{ fontSize: 12, color: "#374151" }}>
-              <Typography component="span" sx={{ fontSize: 11, color: "#9CA3AF", mr: 0.5 }}>Desg:</Typography>
+              <Typography
+                component="span"
+                sx={{ fontSize: 11, color: "#9CA3AF", mr: 0.5 }}
+              >
+                Desg:
+              </Typography>
               {row.designation}
             </Typography>
           )}
@@ -216,20 +350,31 @@ const Delegates = () => {
       sortable: false,
       renderCell: ({ value }) => {
         const TYPE_COLORS = {
-          attendee: { bg: "rgba(47,26,122,0.08)", color: "#2F1A7A" },
-          speaker:  { bg: "rgba(37,99,235,0.08)",  color: "#2563EB" },
-          sponsor:  { bg: "rgba(217,119,6,0.08)",  color: "#D97706" },
-          delegate: { bg: "rgba(5,150,105,0.08)",  color: "#059669" },
-          vip:      { bg: "rgba(219,39,119,0.08)", color: "#DB2777" },
+          attendee: { bg: "rgba(32,23,81,0.08)", color: "#201751" },
+          speaker: { bg: "rgba(37,99,235,0.08)", color: "#2563EB" },
+          sponsor: { bg: "rgba(217,119,6,0.08)", color: "#D97706" },
+          delegate: { bg: "rgba(5,150,105,0.08)", color: "#059669" },
+          vip: { bg: "rgba(219,39,119,0.08)", color: "#DB2777" },
         };
         const t = (value || "attendee").toLowerCase();
-        const c = TYPE_COLORS[t] || { bg: "rgba(107,114,128,0.08)", color: "#6B7280" };
+        const c = TYPE_COLORS[t] || {
+          bg: "rgba(107,114,128,0.08)",
+          color: "#6B7280",
+        };
         return (
           <Box display="flex" alignItems="center" height="100%">
             <Chip
               label={t}
               size="small"
-              sx={{ bgcolor: c.bg, color: c.color, fontWeight: 600, fontSize: "0.7rem", height: 20, borderRadius: "5px", textTransform: "capitalize" }}
+              sx={{
+                bgcolor: c.bg,
+                color: c.color,
+                fontWeight: 600,
+                fontSize: "0.7rem",
+                height: 20,
+                borderRadius: "5px",
+                textTransform: "capitalize",
+              }}
             />
           </Box>
         );
@@ -245,7 +390,14 @@ const Delegates = () => {
           <Chip
             label={value || "Direct"}
             size="small"
-            sx={{ bgcolor: "rgba(14,165,233,0.08)", color: "#0369A1", fontWeight: 600, fontSize: "0.7rem", height: 20, borderRadius: "5px" }}
+            sx={{
+              bgcolor: "rgba(14,165,233,0.08)",
+              color: "#0369A1",
+              fontWeight: 600,
+              fontSize: "0.7rem",
+              height: 20,
+              borderRadius: "5px",
+            }}
           />
         </Box>
       ),
@@ -277,11 +429,23 @@ const Delegates = () => {
       headerName: "Registered On",
       width: 180,
       renderCell: ({ value }) => {
-        if (!value) return <Box display="flex" alignItems="center" height="100%"><Typography sx={{ fontSize: 12, color: "#9CA3AF" }}>—</Typography></Box>;
+        if (!value)
+          return (
+            <Box display="flex" alignItems="center" height="100%">
+              <Typography sx={{ fontSize: 12, color: "#9CA3AF" }}>—</Typography>
+            </Box>
+          );
         const d = new Date(value);
         return (
-          <Box display="flex" flexDirection="column" justifyContent="center" height="100%">
-            <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
+          <Box
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            height="100%"
+          >
+            <Typography
+              sx={{ fontSize: 12, fontWeight: 600, color: "#374151" }}
+            >
               {d.toLocaleDateString("en-CA")}
             </Typography>
             <Typography sx={{ fontSize: 11, color: "#9CA3AF" }}>
@@ -298,34 +462,52 @@ const Delegates = () => {
       sortable: false,
       renderCell: ({ row }) => (
         <Box display="flex" alignItems="center" height="100%" gap={0.75}>
-          <Tooltip title={row.isCheckedIn ? "Already Checked In" : "Mark Attendance"}>
+          <Tooltip
+            title={row.isCheckedIn ? "Already Checked In" : "Mark Attendance"}
+          >
             <span>
               <IconButton
                 size="small"
                 onClick={() => markAttendance(row)}
                 disabled={row.isCheckedIn}
                 sx={{
-                  width: 30, height: 30, borderRadius: "7px",
-                  bgcolor: "rgba(47,26,122,0.08)", color: "#2F1A7A",
-                  "&:hover": { bgcolor: "rgba(47,26,122,0.16)" },
-                  "&.Mui-disabled": { bgcolor: "rgba(47,26,122,0.04)", color: "rgba(47,26,122,0.25)" },
+                  width: 30,
+                  height: 30,
+                  borderRadius: "7px",
+                  bgcolor: "rgba(32,23,81,0.08)",
+                  color: "#201751",
+                  "&:hover": { bgcolor: "rgba(32,23,81,0.16)" },
+                  "&.Mui-disabled": {
+                    bgcolor: "rgba(32,23,81,0.04)",
+                    color: "rgba(32,23,81,0.25)",
+                  },
                 }}
               >
                 <Done sx={{ fontSize: 15 }} />
               </IconButton>
             </span>
           </Tooltip>
-          <Tooltip title={badgeTemplatesData?.length ? "Print Badge" : "No badge templates"}>
+          <Tooltip
+            title={
+              badgeTemplatesData?.length ? "Print Badge" : "No badge templates"
+            }
+          >
             <span>
               <IconButton
                 size="small"
                 onClick={() => setOpenBadge(row)}
                 disabled={!badgeTemplatesData?.length}
                 sx={{
-                  width: 30, height: 30, borderRadius: "7px",
-                  bgcolor: "rgba(47,26,122,0.08)", color: "#2F1A7A",
-                  "&:hover": { bgcolor: "rgba(47,26,122,0.16)" },
-                  "&.Mui-disabled": { bgcolor: "rgba(47,26,122,0.04)", color: "rgba(47,26,122,0.25)" },
+                  width: 30,
+                  height: 30,
+                  borderRadius: "7px",
+                  bgcolor: "rgba(32,23,81,0.08)",
+                  color: "#201751",
+                  "&:hover": { bgcolor: "rgba(32,23,81,0.16)" },
+                  "&.Mui-disabled": {
+                    bgcolor: "rgba(32,23,81,0.04)",
+                    color: "rgba(32,23,81,0.25)",
+                  },
                 }}
               >
                 <Print sx={{ fontSize: 15 }} />
@@ -342,22 +524,51 @@ const Delegates = () => {
       {openBadge && badgeTemplatesData?.length > 0 && (
         <PrintableBadgeModal
           userInfo={openBadge}
-          onClose={() => { setOpenBadge(null); fetchDelegates(); }}
+          onClose={() => {
+            setOpenBadge(null);
+            fetchDelegates();
+          }}
           badgeData={badgeTemplatesData}
         />
       )}
 
       {/* Card */}
-      <Box sx={{ bgcolor: "#fff", borderRadius: "14px", border: "1px solid rgba(47,26,122,0.1)", overflow: "hidden" }}>
-
+      <Box
+        sx={{
+          bgcolor: "#fff",
+          borderRadius: "14px",
+          border: "1px solid rgba(32,23,81,0.1)",
+          overflow: "hidden",
+        }}
+      >
         {/* Header */}
-        <Box sx={{ px: 3, py: 2, display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+        <Box
+          sx={{
+            px: 3,
+            py: 2,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderBottom: "1px solid rgba(0,0,0,0.07)",
+          }}
+        >
           <Box display="flex" alignItems="center" gap={1.5}>
-            <Typography sx={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>
+            <Typography
+              sx={{ fontSize: 16, fontWeight: 700, color: "#111827" }}
+            >
               Delegates List
             </Typography>
-            <Box sx={{ px: 1.5, py: 0.25, bgcolor: "rgba(47,26,122,0.08)", borderRadius: "20px" }}>
-              <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#2F1A7A" }}>
+            <Box
+              sx={{
+                px: 1.5,
+                py: 0.25,
+                bgcolor: "rgba(32,23,81,0.08)",
+                borderRadius: "20px",
+              }}
+            >
+              <Typography
+                sx={{ fontSize: 12, fontWeight: 700, color: "#201751" }}
+              >
                 {rowCount}
               </Typography>
             </Box>
@@ -371,15 +582,169 @@ const Delegates = () => {
                 sx={{
                   borderRadius: "8px",
                   fontSize: 13,
-                  "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(0,0,0,0.1)" },
-                  "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(47,26,122,0.3)" },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#2F1A7A" },
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(0,0,0,0.1)",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(32,23,81,0.3)",
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#201751",
+                  },
                 }}
               >
                 <MenuItem value="">All Types</MenuItem>
                 {attendeeTypes.map((t) => (
-                  <MenuItem key={t._id} value={t.name} sx={{ textTransform: "capitalize", fontSize: 13 }}>
+                  <MenuItem
+                    key={t._id}
+                    value={t.name}
+                    sx={{ textTransform: "capitalize", fontSize: 13 }}
+                  >
                     {t.displayName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <Select
+                multiple
+                value={filters}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  const added = next.find((v) => !filters.includes(v));
+                  if (!added) {
+                    setFilters(next);
+                    return;
+                  }
+                  const prefix = added.split(":")[0];
+                  setFilters([
+                    ...next.filter((v) => !v.startsWith(prefix + ":")),
+                    added,
+                  ]);
+                }}
+                displayEmpty
+                renderValue={(selected) =>
+                  selected.length === 0 ? (
+                    <Typography fontSize={13} color="#9CA3AF">
+                      Filters
+                    </Typography>
+                  ) : (
+                    <Typography fontSize={13}>
+                      {selected.length} filter{selected.length > 1 ? "s" : ""}
+                    </Typography>
+                  )
+                }
+                sx={{
+                  borderRadius: "8px",
+                  fontSize: 13,
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(0,0,0,0.1)",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(32,23,81,0.3)",
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#201751",
+                  },
+                }}
+              >
+                <ListSubheader
+                  sx={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#9CA3AF",
+                    lineHeight: "28px",
+                  }}
+                >
+                  Status
+                </ListSubheader>
+                {[
+                  ["status:1", "Checked In"],
+                  ["status:0", "Not Checked In"],
+                ].map(([val, label]) => (
+                  <MenuItem
+                    key={val}
+                    value={val}
+                    sx={{ fontSize: 13, py: 0.5 }}
+                  >
+                    <Checkbox
+                      checked={filters.includes(val)}
+                      size="small"
+                      sx={{
+                        p: 0.5,
+                        color: "#201751",
+                        "&.Mui-checked": { color: "#201751" },
+                      }}
+                    />
+                    <ListItemText
+                      primary={label}
+                      slotProps={{ primary: { fontSize: 13 } }}
+                    />
+                  </MenuItem>
+                ))}
+                <ListSubheader
+                  sx={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#9CA3AF",
+                    lineHeight: "28px",
+                  }}
+                >
+                  Source
+                </ListSubheader>
+                {[["source:__direct__", "Direct"]].map(([val, label]) => (
+                  <MenuItem
+                    key={val}
+                    value={val}
+                    sx={{ fontSize: 13, py: 0.5 }}
+                  >
+                    <Checkbox
+                      checked={filters.includes(val)}
+                      size="small"
+                      sx={{
+                        p: 0.5,
+                        color: "#201751",
+                        "&.Mui-checked": { color: "#201751" },
+                      }}
+                    />
+                    <ListItemText
+                      primary={label}
+                      slotProps={{ primary: { fontSize: 13 } }}
+                    />
+                  </MenuItem>
+                ))}
+                <ListSubheader
+                  sx={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#9CA3AF",
+                    lineHeight: "28px",
+                  }}
+                >
+                  Printed
+                </ListSubheader>
+                {[
+                  ["printed:1", "Printed"],
+                  ["printed:0", "Not Printed"],
+                ].map(([val, label]) => (
+                  <MenuItem
+                    key={val}
+                    value={val}
+                    sx={{ fontSize: 13, py: 0.5 }}
+                  >
+                    <Checkbox
+                      checked={filters.includes(val)}
+                      size="small"
+                      sx={{
+                        p: 0.5,
+                        color: "#201751",
+                        "&.Mui-checked": { color: "#201751" },
+                      }}
+                    />
+                    <ListItemText
+                      primary={label}
+                      slotProps={{ primary: { fontSize: 13 } }}
+                    />
                   </MenuItem>
                 ))}
               </Select>
@@ -404,26 +769,35 @@ const Delegates = () => {
                   borderRadius: "8px",
                   fontSize: 13,
                   "& fieldset": { borderColor: "rgba(0,0,0,0.1)" },
-                  "&:hover fieldset": { borderColor: "rgba(47,26,122,0.3)" },
-                  "&.Mui-focused fieldset": { borderColor: "#2F1A7A" },
+                  "&:hover fieldset": { borderColor: "rgba(32,23,81,0.3)" },
+                  "&.Mui-focused fieldset": { borderColor: "#201751" },
                 },
               }}
             />
             <Button
               variant="outlined"
               size="small"
-              startIcon={exporting ? <CircularProgress size={13} color="inherit" /> : <FileDownload sx={{ fontSize: 16 }} />}
+              startIcon={
+                exporting ? (
+                  <CircularProgress size={13} color="inherit" />
+                ) : (
+                  <FileDownload sx={{ fontSize: 16 }} />
+                )
+              }
               onClick={handleExportAll}
               disabled={exporting}
               sx={{
                 borderRadius: "8px",
-                borderColor: "rgba(47,26,122,0.25)",
-                color: "#2F1A7A",
+                borderColor: "rgba(32,23,81,0.25)",
+                color: "#201751",
                 fontWeight: 600,
                 fontSize: 13,
                 textTransform: "none",
                 px: 1.5,
-                "&:hover": { borderColor: "#2F1A7A", bgcolor: "rgba(47,26,122,0.04)" },
+                "&:hover": {
+                  borderColor: "#201751",
+                  bgcolor: "rgba(32,23,81,0.04)",
+                },
               }}
             >
               {exporting ? "Exporting…" : "Download"}
@@ -450,7 +824,7 @@ const Delegates = () => {
           sx={{
             border: "none",
             "& .MuiDataGrid-columnHeaders": {
-              bgcolor: "rgba(47,26,122,0.03)",
+              bgcolor: "rgba(32,23,81,0.03)",
               borderBottom: "1px solid rgba(0,0,0,0.07)",
               fontSize: 12,
               fontWeight: 700,
@@ -458,10 +832,17 @@ const Delegates = () => {
               textTransform: "uppercase",
               letterSpacing: "0.04em",
             },
-            "& .MuiDataGrid-row": { borderBottom: "1px solid rgba(0,0,0,0.05)" },
-            "& .MuiDataGrid-row:hover": { bgcolor: "rgba(47,26,122,0.025)" },
-            "& .MuiDataGrid-cell": { borderBottom: "none", alignItems: "center" },
-            "& .MuiDataGrid-footerContainer": { borderTop: "1px solid rgba(0,0,0,0.07)" },
+            "& .MuiDataGrid-row": {
+              borderBottom: "1px solid rgba(0,0,0,0.05)",
+            },
+            "& .MuiDataGrid-row:hover": { bgcolor: "rgba(32,23,81,0.025)" },
+            "& .MuiDataGrid-cell": {
+              borderBottom: "none",
+              alignItems: "center",
+            },
+            "& .MuiDataGrid-footerContainer": {
+              borderTop: "1px solid rgba(0,0,0,0.07)",
+            },
           }}
         />
       </Box>

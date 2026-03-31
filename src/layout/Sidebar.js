@@ -12,7 +12,7 @@ import { apiActivation, method } from "../apiPath";
 import useApiNew from "../hooks/useApi";
 import keyNames from "../keyName";
 
-const ACCENT = "#2F1A7A";
+const ACCENT = "#201751";
 
 const sections = [
   {
@@ -62,14 +62,14 @@ const NavItem = ({ label, link, icon: Icon, exact }) => {
             ? "3px solid rgba(255,255,255,0.45)"
             : "3px solid transparent",
           background: isActive
-            ? "linear-gradient(90deg, rgba(47,26,122,0.82), rgba(107,79,200,0.56))"
+            ? "linear-gradient(90deg, rgba(32,23,81,0.82), rgba(32,23,81,0.56))"
             : "transparent",
           cursor: "pointer",
           transition: "all 0.15s",
           "&:hover": !isActive
             ? {
-                background: "rgba(47,26,122,0.1)",
-                borderLeftColor: "rgba(47,26,122,0.35)",
+                background: "rgba(32,23,81,0.1)",
+                borderLeftColor: "rgba(32,23,81,0.35)",
               }
             : {},
         }}
@@ -206,7 +206,7 @@ const AdminSidebar = ({ open }) => {
         sx={{
           height: 3,
           flexShrink: 0,
-          background: `linear-gradient(90deg, #2F1A7A, #6B4FC8, #2F1A7A)`,
+          background: `linear-gradient(90deg, #201751, #6B4FC8, #201751)`,
         }}
       />
     </Box>

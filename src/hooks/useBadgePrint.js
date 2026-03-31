@@ -36,8 +36,14 @@ const useBadgePrint = (badge) => {
   }, [badge?.fontFamily]);
 
   // Print page style
-  const pageStyle = useMemo(
-    () => `
+  const pageStyle = useMemo(() => {
+    const marginMap = {
+      left:   "margin-left: 0; margin-right: auto;",
+      center: "margin-left: auto; margin-right: auto;",
+      right:  "margin-left: auto; margin-right: 0;",
+    };
+    const marginStyle = marginMap[badge?.alignment] ?? marginMap.center;
+    return `
       @page { size: auto; margin: 0; }
       @media print {
         body {
@@ -48,11 +54,12 @@ const useBadgePrint = (badge) => {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
           font-family: "${badge?.fontFamily || "Arial"}", sans-serif !important;
+          display: block;
+          ${marginStyle}
         }
       }
-    `,
-    [badge?.fontFamily],
-  );
+    `;
+  }, [badge?.fontFamily, badge?.alignment]);
 
   return { pageStyle };
 };
