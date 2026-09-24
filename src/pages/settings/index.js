@@ -11,9 +11,11 @@ import {
   InputAdornment,
   OutlinedInput,
 } from "@mui/material";
-import { CloudSync, CloudUpload, Category, Badge, AppRegistration, ContentCopy, Check, QrCode2, Refresh } from "@mui/icons-material";
+import { CloudSync, CloudUpload, Category, Badge, AppRegistration, ContentCopy, Check, QrCode2, Refresh, DeleteOutline, DeleteSweep } from "@mui/icons-material";
 import { useSelector } from "react-redux";
+import axios from "axios";
 import useApi from "../../hooks/useApi";
+import { useDirect } from "../../hooks";
 import keyNames from "../../keyName";
 import { getToast } from "../../common/utils";
 import {
@@ -27,6 +29,7 @@ import {
   apiRegistrationFields,
   apiRegistrationFieldsPull,
   apiLocalIp,
+  apiSdkConfigs,
   method,
   apiPath,
 } from "../../apiPath";
@@ -59,6 +62,12 @@ const SyncButton = ({ label, icon: Icon, onClick, loading, disabled }) => (
 
 const Settings = () => {
   const hitApi = useApi();
+  const directDispatch = useDirect();
+  const notify = (type, description) =>
+    directDispatch(
+      { type, title: type === "success" ? "Success" : "Error", description, position: "top-center" },
+      keyNames.toastData,
+    );
   const {
     isLoading,
     attendeeTypesData,
@@ -82,6 +91,40 @@ const Settings = () => {
   useEffect(() => {
     fetchKioskUrl();
   }, []);
+
+  const [sdkConfigs, setSdkConfigs] = useState([]);
+  const [deletingSdk, setDeletingSdk] = useState(null); // config id, "all", or null
+
+  const fetchSdkConfigs = () => {
+    axios
+      .get(apiPath + apiSdkConfigs)
+      .then(({ data }) => setSdkConfigs(data.data || []))
+      .catch(() => setSdkConfigs([]));
+  };
+
+  useEffect(() => {
+    fetchSdkConfigs();
+  }, []);
+
+  const deleteSdk = async (config) => {
+    const isAll = !config;
+    const msg = isAll
+      ? "Delete ALL downloaded SDK files? Registration forms will use the default widget."
+      : `Delete SDK file for "${config.type}"? This form will use the default widget.`;
+    if (!window.confirm(msg)) return;
+    setDeletingSdk(isAll ? "all" : config._id);
+    try {
+      const { data } = await axios.delete(
+        apiPath + apiSdkConfigs + (isAll ? "" : `/${config._id}`),
+      );
+      notify("success", data.message || "SDK file deleted");
+      fetchSdkConfigs();
+    } catch (err) {
+      notify("error", err.response?.data?.message || "Failed to delete SDK file");
+    } finally {
+      setDeletingSdk(null);
+    }
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(kioskUrl);
@@ -402,6 +445,64 @@ const Settings = () => {
               No registration forms pulled yet
             </Typography>
           )}
+        </Box>
+      </Box>
+
+      {/* SDK Files */}
+      <Box
+        sx={{
+          bgcolor: "#fff",
+          borderRadius: "12px",
+          border: "1px solid rgba(32,23,81,0.12)",
+          p: 3,
+          mt: 3,
+        }}
+      >
+        <Typography variant="subtitle1" fontWeight={700} sx={{ color: "#201751", mb: 0.5 }}>
+          SDK Files
+        </Typography>
+        <Typography variant="body2" sx={{ color: "#6B7280", mb: 2.5 }}>
+          Downloaded registration SDK files. Deleting one makes that form fall back to the default widget.
+          "Delete All" also removes leftover files from previous events.
+        </Typography>
+        <Divider sx={{ mb: 2.5, borderColor: "rgba(32,23,81,0.08)" }} />
+        <Box display="flex" alignItems="center" gap={1.5} flexWrap="wrap">
+          {sdkConfigs.length > 0 ? (
+            sdkConfigs.map((c) => (
+              <Chip
+                key={c._id}
+                label={`${c.type}${c.sdkLocalPath ? "" : " (file missing)"}`}
+                size="small"
+                title={c.sdkCloudPath}
+                onDelete={deletingSdk ? undefined : () => deleteSdk(c)}
+                deleteIcon={
+                  deletingSdk === c._id ? <CircularProgress size={14} /> : <DeleteOutline />
+                }
+                sx={{
+                  bgcolor: "rgba(32,23,81,0.08)",
+                  color: "#201751",
+                  fontWeight: 600,
+                  fontSize: "0.75rem",
+                }}
+              />
+            ))
+          ) : (
+            <Typography variant="caption" sx={{ color: "#9CA3AF" }}>
+              No SDK configs saved
+            </Typography>
+          )}
+        </Box>
+        <Box mt={2.5}>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={deletingSdk === "all" ? <CircularProgress size={16} /> : <DeleteSweep />}
+            onClick={() => deleteSdk(null)}
+            disabled={!!deletingSdk}
+            sx={{ borderRadius: "10px", px: 3, py: 1.25, fontWeight: 600, textTransform: "none" }}
+          >
+            Delete All SDK Files
+          </Button>
         </Box>
       </Box>
 

@@ -29,7 +29,8 @@ const Register = () => {
         formId,
         props: {
           // debug: true,
-          // successRedirect: "/thank-you",
+          // Hash route: widget sets window.location.href, so "/thank-you" would leave the app
+          successRedirect: `#/thank-you?type=${encodeURIComponent(type)}`,
           getForm: `${apiBase}/api/registration-fields/by-type/${type}`,
           submitForm: `${apiBase}/api/registrations`,
         },

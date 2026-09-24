@@ -46,6 +46,10 @@ function deleteSdkConfig(id) {
   return row;
 }
 
+function deleteAllSdkConfigs() {
+  return db.prepare("DELETE FROM sdk_configs").run().changes;
+}
+
 function rowToObject(r) {
   return {
     _id: r.id,
@@ -58,4 +62,4 @@ function rowToObject(r) {
   };
 }
 
-module.exports = { getAllSdkConfigs, getSdkConfigById, insertSdkConfig, updateSdkConfig, deleteSdkConfig };
+module.exports = { getAllSdkConfigs, getSdkConfigById, insertSdkConfig, updateSdkConfig, deleteSdkConfig, deleteAllSdkConfigs };

@@ -4,6 +4,7 @@ import LazyLoad from "../common/LazyLoad";
 import Layout from "./Layout";
 import Route from "./Route";
 const Register = LazyLoad(lazy(() => import("../pages/register")));
+const ThankYou = LazyLoad(lazy(() => import("../pages/thank-you")));
 const Activate = LazyLoad(lazy(() => import("../pages/activate")));
 const NotFound = LazyLoad(lazy(() => import("../pages/notfound")));
 const Dashboard = LazyLoad(lazy(() => import("../pages/dashboard")));
@@ -20,6 +21,10 @@ const router = createBrowserRouter([
   {
     path: "/register",
     element: <Register />,
+  },
+  {
+    path: "/thank-you",
+    element: <ThankYou />,
   },
   {
     path: "/scan",

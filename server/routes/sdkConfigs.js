@@ -9,6 +9,7 @@ const {
   insertSdkConfig,
   updateSdkConfig,
   deleteSdkConfig,
+  deleteAllSdkConfigs,
 } = require("../database/sdkConfigs");
 const settings = require("../settings");
 
@@ -126,6 +127,22 @@ router.put("/:id", async (req, res) => {
       type: newType,
     });
     res.json({ status: 200, message: "SDK config updated", data: updated });
+  } catch (err) {
+    res.status(500).json({ status: 500, message: err.message });
+  }
+});
+
+// DELETE /api/sdk-configs - remove all configs and every file in sdk-files (incl. leftovers from old events)
+router.delete("/", (_req, res) => {
+  try {
+    const configs = deleteAllSdkConfigs();
+    let files = 0;
+    for (const name of fs.readdirSync(SDK_FILES_DIR)) {
+      if (!name.endsWith(".js")) continue;
+      fs.unlinkSync(path.join(SDK_FILES_DIR, name));
+      files++;
+    }
+    res.json({ status: 200, message: `Deleted ${configs} config(s) and ${files} file(s)`, data: { configs, files } });
   } catch (err) {
     res.status(500).json({ status: 500, message: err.message });
   }
