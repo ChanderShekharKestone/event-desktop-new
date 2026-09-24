@@ -31,7 +31,9 @@ export const getByPath =
         dispatch({ type: name, payload, keyName: apiErrors });
         if (toast?.error) {
           if (toast.error.description === apiMsg)
-            toast.error.description = payload.message;
+            toast.error.description =
+              payload?.message ||
+              "Cannot reach server. Check the network connection.";
           payload = toast.error;
           dispatch({ type: name, payload, keyName: toastData });
         }

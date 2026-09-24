@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@mui/material";
+import { basePath } from "../../apiPath";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -10,11 +11,7 @@ const Register = () => {
     const params = new URLSearchParams(location.search);
     const type = params.get("type") || "attendee";
 
-    // file: = Electron production, port 3000 = React dev server, else = LAN browser
-    const apiBase =
-      window.location.protocol === "file:" || window.location.port === "3000"
-        ? "http://localhost:4001"
-        : window.location.origin;
+    const apiBase = basePath;
 
     let cancelled = false;
 

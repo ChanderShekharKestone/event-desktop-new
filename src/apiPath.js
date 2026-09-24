@@ -1,4 +1,6 @@
-const path = "http://localhost:4001";
+const isLocalApp =
+  window.location.protocol === "file:" || window.location.port === "3000";
+const path = isLocalApp ? "http://localhost:4001" : window.location.origin;
 export const method = {
   post: "post",
   put: "put",

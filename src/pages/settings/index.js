@@ -76,7 +76,7 @@ const Settings = () => {
     fetch(apiPath + apiLocalIp)
       .then((r) => r.json())
       .then(({ ip, port, protocol = "https" }) => setKioskUrl(`${protocol}://${ip}:${port}/#/scan`))
-      .catch(() => setKioskUrl(`http://localhost:4001/#/scan`));
+      .catch(() => setKioskUrl("Could not detect LAN IP. Check network and press refresh."));
   };
 
   useEffect(() => {

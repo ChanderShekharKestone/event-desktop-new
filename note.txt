@@ -110,3 +110,27 @@ curl http://localhost:4001/api/app-settings/lan-url
 
 # Health check
 curl http://localhost:4001/api/health
+
+# ── BUILD WINDOWS EXE ON ANOTHER PC ────────────────────────────────────────────
+
+# COPY these to the Windows PC:
+#   package.json
+#   package-lock.json
+#   electron/main.js          (only this file from electron/)
+#   server/                   (whole folder)
+#   src/                      (whole folder)
+#   public/                   (whole folder - has icon.ico)
+#   README.md, note.txt       (optional)
+#
+# DO NOT COPY:
+#   node_modules/  build/  dist/  server-cloud/  sdk-files/  .git/  user.json
+#   electron/app_data.db*  electron/backup/  electron/settings.json
+
+# Zip on Mac (from project root)
+zip -r event-desktop-win.zip package.json package-lock.json electron/main.js server src public README.md note.txt -x "*.DS_Store"
+
+# On Windows: install Node.js LTS + VS Build Tools (Desktop development with C++) + Python 3, then:
+npm install
+npm run dist
+# Output: dist\Vosmos Event Setup 0.1.0.exe
+# If "Cannot create symbolic link" error -> run PowerShell as Administrator or enable Developer Mode
