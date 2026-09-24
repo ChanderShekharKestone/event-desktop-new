@@ -70,6 +70,16 @@ function isOnLocalDrive(folder) {
   return true;
 }
 
+// Attach native dialogs to the app window: without a parent they can open behind
+// the window / unfocused, which looks like the export "hangs".
+const parentWindow = (electron) =>
+  electron.BrowserWindow.getFocusedWindow() || electron.BrowserWindow.getAllWindows()[0];
+
+const showDialog = (electron, options) => {
+  const win = parentWindow(electron);
+  return win ? electron.dialog.showOpenDialog(win, options) : electron.dialog.showOpenDialog(options);
+};
+
 const stamp = () => new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
 
 const CSV_COLUMNS = [
@@ -111,7 +121,8 @@ router.post("/export", async (_req, res) => {
     return res.status(501).json({ status: 501, message: "Export is only available in the desktop app" });
   }
   try {
-    const { canceled, filePaths } = await electron.dialog.showOpenDialog({
+    const t0 = Date.now();
+    const { canceled, filePaths } = await showDialog(electron, {
       title: "Choose a folder to save the backup (USB drive recommended)",
       buttonLabel: "Save Backup Here",
       properties: ["openDirectory", "createDirectory"],
@@ -125,10 +136,15 @@ router.post("/export", async (_req, res) => {
     const dbFile = path.join(folder, `vosmos-backup-${tag}.db`);
     const csvFile = path.join(folder, `registrations-${tag}.csv`);
 
+    const t1 = Date.now();
     // Online backup API: consistent copy even while the app is writing
     await db.backup(dbFile);
+    const t2 = Date.now();
     const rows = db.prepare("SELECT * FROM registrations ORDER BY eventId, id").all();
     fs.writeFileSync(csvFile, toCsv(rows));
+    console.log(
+      `[export] folder picker ${t1 - t0}ms, db backup ${t2 - t1}ms, csv ${Date.now() - t2}ms (${rows.length} rows)`,
+    );
 
     res.json({
       status: 200,
@@ -157,7 +173,7 @@ router.post("/restore", async (_req, res) => {
       });
     }
 
-    const { canceled, filePaths } = await electron.dialog.showOpenDialog({
+    const { canceled, filePaths } = await showDialog(electron, {
       title: "Choose a Vosmos backup (.db) to restore",
       buttonLabel: "Restore",
       properties: ["openFile"],
