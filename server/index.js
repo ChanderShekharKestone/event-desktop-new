@@ -28,24 +28,24 @@ for (const name of Object.keys(nets)) {
   }
 }
 
-// CORS — allow React dev server and Electron renderer
-// app.use(cors({
-//   origin: "*",
-//   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-// }));
-
-// const corsOptions = {
-//   origin: ["http://localhost:3000", "http://localhost:4001"],
-//   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-//   credentials: true,
-// };
-// app.use(cors(corsOptions));
-
+// CORS — only the Electron renderer (file:// sends Origin "null"), the React dev
+// server, and pages served by this server itself (LAN devices). Blocks random
+// websites open in a browser on this PC from reading the local API.
+const DEV_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"];
 app.use(
-  cors({
-    origin: (_origin, callback) => callback(null, true),
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    credentials: true,
+  cors((req, callback) => {
+    const origin = req.header("Origin");
+    let sameHost = false;
+    try {
+      sameHost = !!origin && new URL(origin).host === req.headers.host;
+    } catch {}
+    const allowed =
+      !origin || origin === "null" || DEV_ORIGINS.includes(origin) || sameHost;
+    callback(null, {
+      origin: allowed,
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+      credentials: true,
+    });
   }),
 );
 
@@ -62,6 +62,27 @@ app.use(express.static(BUILD_DIR));
 const PUBLIC_DIR = path.join(__dirname, "../public");
 app.use(express.static(PUBLIC_DIR));
 
+// LAN devices may only register and scan. Everything else (sync, activation,
+// settings, registration list, seed...) is restricted to this PC.
+const LAN_ALLOWED = [
+  ["GET", /^\/api\/health$/],
+  ["GET", /^\/api\/sdk-configs$/],
+  ["GET", /^\/api\/registration-fields\/by-type\/[^/]+$/],
+  ["POST", /^\/api\/registrations$/],
+  ["GET", /^\/api\/attendee-types$/],
+  ["GET", /^\/api\/badge-templates$/],
+  ["POST", /^\/api\/scan\/(checkin|search)$/],
+];
+const LOOPBACK = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
+
+app.use("/api", (req, res, next) => {
+  if (LOOPBACK.has(req.socket.remoteAddress)) return next();
+  const urlPath = req.originalUrl.split("?")[0];
+  const ok = LAN_ALLOWED.some(([m, re]) => m === req.method && re.test(urlPath));
+  if (ok) return next();
+  res.status(403).json({ status: 403, message: "Not allowed from network devices" });
+});
+
 // Routes
 app.use("/api/activation", require("./routes/activation"));
 app.use("/api/registrations", require("./routes/registrations"));
@@ -72,7 +93,8 @@ app.use("/api/badge-templates", require("./routes/badgeTemplates"));
 app.use("/api/app-settings", require("./routes/appSettings"));
 app.use("/api/sdk-configs", require("./routes/sdkConfigs"));
 app.use("/api/registration-fields", require("./routes/registrationFields"));
-app.use("/api/seed", require("./routes/seed"));
+// Test-data endpoints (seed / wipe) only in development
+if (!process.env.APP_PACKAGED) app.use("/api/seed", require("./routes/seed"));
 
 // Health check
 app.get("/api/health", (_req, res) => res.json({ status: 200, message: "OK" }));

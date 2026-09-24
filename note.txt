@@ -127,7 +127,7 @@ curl http://localhost:4001/api/health
 #   electron/app_data.db*  electron/backup/  electron/settings.json
 
 # Zip on Mac (from project root)
-zip -r event-desktop-win.zip package.json package-lock.json electron/main.js server src public README.md note.txt -x "*.DS_Store"
+zip -r event-desktop-win.zip package.json package-lock.json .env.production electron/main.js server src public README.md note.txt -x "*.DS_Store"
 
 # On Windows: install Node.js LTS + VS Build Tools (Desktop development with C++) + Python 3, then:
 npm install

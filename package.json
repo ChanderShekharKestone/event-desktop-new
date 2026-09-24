@@ -71,6 +71,12 @@
       "**/node_modules/better-sqlite3/**",
       "**/node_modules/node-machine-id/**"
     ],
+    "electronFuses": {
+      "runAsNode": false,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "onlyLoadAppFromAsar": true
+    },
     "directories": {
       "output": "dist"
     },

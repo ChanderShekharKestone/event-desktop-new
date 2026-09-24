@@ -97,6 +97,7 @@ Copy only the source files below. `npm install` recreates everything else.
 |-----------------------|--------------------------------------------------|
 | `package.json`        | Dependencies, scripts, electron-builder config   |
 | `package-lock.json`   | Same dependency versions as on this machine      |
+| `.env.production`     | Turns off source maps in the build (hidden file, easy to miss) |
 | `electron/main.js`    | Electron main process (**only this file** from `electron/`) |
 | `server/` (whole folder) | Embedded local API, DB migrations, sync       |
 | `src/` (whole folder) | React UI source                                  |
@@ -116,7 +117,7 @@ Copy only the source files below. `npm install` recreates everything else.
 Zip it on the Mac (run in the project root):
 
 ```bash
-zip -r event-desktop-win.zip package.json package-lock.json electron/main.js server src public README.md note.txt -x "*.DS_Store"
+zip -r event-desktop-win.zip package.json package-lock.json .env.production electron/main.js server src public README.md note.txt -x "*.DS_Store"
 ```
 
 ### On the Windows PC
@@ -194,6 +195,29 @@ MONGO_URI=mongodb://localhost:27017/eventdesktop npm run dev    # http://localho
 
 Requires a local MongoDB. Seed scripts: `seed.js`, `seed2.js`, `seedActivationKey.js`, `seedRegistrationFields.js`.
 To point the desktop app at it, change `CLOUD_BASE` in `server/config.js`.
+
+## Security (installed app)
+
+These apply only to the installed app. `npm run dev` keeps DevTools, the menu and the seed endpoints.
+
+- **Electron:** DevTools are disabled and the Reload/DevTools menu is removed. F12, Ctrl+Shift+I and similar shortcuts are blocked. New windows and navigation to outside sites are blocked, and the window runs sandboxed. The app won't start with `--remote-debugging-port`.
+- **Electron fuses** (`build.electronFuses` in `package.json`): `ELECTRON_RUN_AS_NODE`, `NODE_OPTIONS` and `--inspect` are disabled, and the app only loads from `app.asar`.
+- **Source maps:** turned off in `.env.production`, so the full React source isn't shipped.
+- **Local API (`server/index.js`):**
+  - Requests from other network (LAN) devices can only reach the endpoints needed to register and scan. Everything else returns `403`.
+
+    | Allowed from LAN devices |
+    |---|
+    | `GET /api/health`, `GET /api/sdk-configs`, `GET /api/registration-fields/by-type/:type` |
+    | `POST /api/registrations` |
+    | `GET /api/attendee-types`, `GET /api/badge-templates` |
+    | `POST /api/scan/checkin`, `POST /api/scan/search` |
+
+  - Admin endpoints (sync, activation, registration list, settings, SDK configs) only work from the PC running the app.
+  - CORS only accepts requests from the Electron app, `localhost:3000` and pages served by this server.
+  - `/api/seed` (test data and wipe) is not available in the installed app.
+
+To give LAN devices access to another endpoint, add it to `LAN_ALLOWED` in `server/index.js`.
 
 ## Troubleshooting
 
