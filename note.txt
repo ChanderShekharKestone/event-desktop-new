@@ -116,18 +116,30 @@ curl http://localhost:4001/api/health
 # COPY these to the Windows PC:
 #   package.json
 #   package-lock.json
+#   .env.production           (hidden file - turns off source maps, easy to miss)
 #   electron/main.js          (only this file from electron/)
 #   server/                   (whole folder)
 #   src/                      (whole folder)
-#   public/                   (whole folder - has icon.ico)
+#   public/                   (whole folder - has icon.ico, widget.js)
 #   README.md, note.txt       (optional)
 #
 # DO NOT COPY:
 #   node_modules/  build/  dist/  server-cloud/  sdk-files/  .git/  user.json
 #   electron/app_data.db*  electron/backup/  electron/settings.json
+#   widget.cloud-backup.js  event-desktop-win.zip (old zip)
 
 # Zip on Mac (from project root)
+# 1. Check you are on the branch you want to build (security-hardening or main)
+git branch --show-current
+
+# 2. Delete the old zip first - "zip -r" ADDS to an existing zip, it does not replace it
+rm -f event-desktop-win.zip
+
+# 3. Create the zip
 zip -r event-desktop-win.zip package.json package-lock.json .env.production electron/main.js server src public README.md note.txt -x "*.DS_Store"
+
+# 4. Verify contents (.env.production must be listed)
+unzip -l event-desktop-win.zip | grep -E "env.production|main.js|widget.js"
 
 # On Windows: install Node.js LTS + VS Build Tools (Desktop development with C++) + Python 3, then:
 npm install

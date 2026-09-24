@@ -196,6 +196,28 @@ MONGO_URI=mongodb://localhost:27017/eventdesktop npm run dev    # http://localho
 Requires a local MongoDB. Seed scripts: `seed.js`, `seed2.js`, `seedActivationKey.js`, `seedRegistrationFields.js`.
 To point the desktop app at it, change `CLOUD_BASE` in `server/config.js`.
 
+## Backup, restore & Clean All Data
+
+These are at the bottom of **Settings**. They only work on the host PC: LAN devices get `403`. The routes are in `server/routes/appReset.js`.
+
+- **Export Backup:** you choose a folder, and the app saves two files there:
+  - `vosmos-backup-<eventId>-<date>.db`, a full, restorable copy made with SQLite's online backup;
+  - `registrations-<eventId>-<date>.csv`, all registrations for Excel or other software.
+
+  It warns if the folder is on the laptop's own drive, because Clean All Data won't delete it.
+- **Restore from Backup:** you pick a `.db` file. The app checks it (integrity check and expected tables), replaces the database and restarts.
+- **Clean All Data:** for the end of an event, or before returning a laptop.
+  - **Blocked while there are unpushed changes.**
+  - Step 1: save a backup, or tick "don't need one".
+  - Step 2: type a confirmation code the server generates, e.g. `WIPE-7K3Q`. The code is new each time, valid for 2 minutes and single-use.
+  - What it deletes:
+    - every table, for all events, followed by `VACUUM`, so deleted rows can't be recovered from the file;
+    - `backup/` and `sdk-files/`;
+    - `settings.json`, i.e. the activation;
+    - Chromium storage.
+  - The app then returns to the activation screen.
+- **Uninstall:** `nsis.deleteAppDataOnUninstall: true` removes `%APPDATA%\Vosmos Event` when the app is uninstalled. It only works with the default one-click installer.
+
 ## Security (installed app)
 
 These apply only to the installed app. `npm run dev` keeps DevTools, the menu and the seed endpoints.

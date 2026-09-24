@@ -40,5 +40,12 @@ export const apiRegistrationFieldsPull = "registration-fields/pull";
 export const apiUserScan = "scan/checkin";
 export const apiUserSearch = "scan/search";
 
+// Backup / Restore / Clean all data (host PC only)
+export const apiAppResetSummary = "app-reset/summary";
+export const apiAppResetExport = "app-reset/export";
+export const apiAppResetRestore = "app-reset/restore";
+export const apiAppResetChallenge = "app-reset/challenge";
+export const apiAppResetWipe = "app-reset/wipe";
+
 // Network
 export const apiLocalIp = "local-ip";

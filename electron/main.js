@@ -92,8 +92,9 @@ app.whenReady().then(() => {
   createWindow();
 });
 
-// Backup database when app closes
+// Backup database when app closes (skipped right after Clean All Data / Restore)
 app.on("before-quit", () => {
+  if (process.env.APP_SKIP_QUIT_BACKUP) return;
   try {
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const dest = path.join(backupFolder, `app_data_${timestamp}.db`);

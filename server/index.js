@@ -93,6 +93,7 @@ app.use("/api/badge-templates", require("./routes/badgeTemplates"));
 app.use("/api/app-settings", require("./routes/appSettings"));
 app.use("/api/sdk-configs", require("./routes/sdkConfigs"));
 app.use("/api/registration-fields", require("./routes/registrationFields"));
+app.use("/api/app-reset", require("./routes/appReset"));
 // Test-data endpoints (seed / wipe) only in development
 if (!process.env.APP_PACKAGED) app.use("/api/seed", require("./routes/seed"));
 

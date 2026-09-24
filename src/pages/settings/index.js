@@ -15,6 +15,7 @@ import { CloudSync, CloudUpload, Category, Badge, AppRegistration, ContentCopy, 
 import { useSelector } from "react-redux";
 import axios from "axios";
 import useApi from "../../hooks/useApi";
+import DataManagement from "./DataManagement";
 import { useDirect } from "../../hooks";
 import keyNames from "../../keyName";
 import { getToast } from "../../common/utils";
@@ -505,6 +506,8 @@ const Settings = () => {
           </Button>
         </Box>
       </Box>
+
+      <DataManagement notify={notify} refreshKey={pendingCount} />
 
     </Box>
   );

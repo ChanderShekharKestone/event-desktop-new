@@ -99,6 +99,9 @@
     "win": {
       "target": "nsis",
       "icon": "public/icon.ico"
+    },
+    "nsis": {
+      "deleteAppDataOnUninstall": true
     }
   }
 }

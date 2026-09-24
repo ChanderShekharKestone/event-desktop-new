@@ -105,6 +105,8 @@ router.post("/", async (req, res) => {
     settings.set("expiresAt", expiresAt);
     settings.set("customerId", String(customerId));
     saveEventId(eventId);
+    // Re-enable the on-quit DB backup if it was turned off by Clean All Data
+    delete process.env.APP_SKIP_QUIT_BACKUP;
     await syncFromCloud().catch(() => {});
 
     res.json({
