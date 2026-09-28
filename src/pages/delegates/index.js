@@ -23,6 +23,7 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import useDebounce from "../../hooks/useDebounce";
 import useApi from "../../hooks/useApi";
+import useDirect from "../../hooks/useDirect";
 import {
   apiPath,
   apiGetRegistrations,
@@ -135,6 +136,16 @@ const Delegates = () => {
     );
   }, [hitApi]);
 
+  const directDispatch = useDirect();
+  const notify = useCallback(
+    (type, description) =>
+      directDispatch(
+        { type, title: type === "success" ? "Success" : "Error", description, position: "top-center" },
+        keyNames.toastData,
+      ),
+    [directDispatch],
+  );
+
   const markAttendance = useCallback(
     async (row) => {
       try {
@@ -145,11 +156,20 @@ const Delegates = () => {
           isPrintClicked: false,
         });
         fetchDelegates();
+        notify(
+          "success",
+          `${row.firstName ?? ""} ${row.lastName ?? ""}`.trim() + " marked as present",
+        );
       } catch (err) {
         console.error("Mark attendance failed:", err.message);
+        notify(
+          "error",
+          err.response?.data?.message ||
+            "Cannot reach server. Check the network connection.",
+        );
       }
     },
-    [fetchDelegates],
+    [fetchDelegates, notify],
   );
 
   const handleExportAll = useCallback(async () => {

@@ -16,9 +16,9 @@ export const getByPath =
         payload = res.data.data;
         dispatch({ type: name, payload, keyName, keyTarget });
         if (toast?.success) {
-          if (toast.success.description === apiMsg)
-            toast.success.description = res.data.message;
-          payload = toast.success;
+          payload = { ...toast.success };
+          if (payload.description === apiMsg)
+            payload.description = res.data.message;
           dispatch({ type: name, payload, keyName: toastData });
         }
       })
@@ -30,11 +30,11 @@ export const getByPath =
         }
         dispatch({ type: name, payload, keyName: apiErrors });
         if (toast?.error) {
-          if (toast.error.description === apiMsg)
-            toast.error.description =
-              payload?.message ||
-              "Cannot reach server. Check the network connection.";
-          payload = toast.error;
+          const message =
+            payload?.message ||
+            "Cannot reach server. Check the network connection.";
+          payload = { ...toast.error };
+          if (payload.description === apiMsg) payload.description = message;
           dispatch({ type: name, payload, keyName: toastData });
         }
       })
