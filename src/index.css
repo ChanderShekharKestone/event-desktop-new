@@ -153,3 +153,34 @@ body.darkAlgorithm {
   border-radius: 4px;
   border: 1.5px solid rgba(32, 23, 81, 0.2);
 }
+
+.scanner-line::after {
+  content: "";
+  position: absolute;
+  top: 15%;
+  left: 10%;
+  width: 80%;
+  height: clamp(2px, 0.5vmin, 3px);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--colorPrimary),
+    rgba(255, 255, 255, 0.8),
+    var(--colorPrimary),
+    transparent
+  );
+  animation: scanAnimation 2s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 8px var(--colorPrimary));
+  border-radius: 2px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+@keyframes scanAnimation {
+  0% {
+    top: 0%;
+  }
+  100% {
+    top: 104%;
+  }
+}
