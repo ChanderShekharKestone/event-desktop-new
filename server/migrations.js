@@ -410,6 +410,54 @@ function runMigrations() {
       updated_at TEXT NOT NULL
     )`,
   ).run();
+
+  // Giveaways — stock pulled from cloud; assignments are kept locally so they
+  // work offline and are pushed through giveaway_ops.
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS giveaways (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cloud_id TEXT NOT NULL,
+      event_id TEXT NOT NULL,
+      title TEXT NOT NULL DEFAULT '',
+      total_quantity INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT,
+      updated_at TEXT,
+      UNIQUE(cloud_id, event_id)
+    )`,
+  ).run();
+
+  // Who has which giveaway. email (lowercase) is the stable key: local registration
+  // ids change when a cloud pull replaces the row. attendee_cloud_id covers cloud
+  // assignments whose attendee is not in the local registrations yet.
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS giveaway_assignments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_id TEXT NOT NULL,
+      giveaway_id TEXT NOT NULL,
+      email TEXT,
+      attendee_cloud_id TEXT,
+      assigned_at TEXT
+    )`,
+  ).run();
+  db.prepare(
+    `CREATE INDEX IF NOT EXISTS idx_giveaway_assignments_lookup
+       ON giveaway_assignments (event_id, giveaway_id, email)`,
+  ).run();
+
+  // Assign / revert actions waiting to be pushed. At most one pending op per
+  // (giveaway, email): an opposite action cancels the pending one.
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS giveaway_ops (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_id TEXT NOT NULL,
+      giveaway_id TEXT NOT NULL,
+      email TEXT NOT NULL,
+      action TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      error TEXT,
+      created_at TEXT NOT NULL
+    )`,
+  ).run();
 }
 
 module.exports = runMigrations;

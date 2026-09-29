@@ -6,6 +6,7 @@ import {
   Print,
   LockReset,
   AppRegistration,
+  CardGiftcard,
 } from "@mui/icons-material";
 import { Box } from "@mui/material";
 import { apiActivation, method } from "../apiPath";
@@ -35,6 +36,7 @@ const sections = [
     color: "#6B4FC8",
     items: [
       { label: "Scan & Print", link: "/app/scan-print", icon: Print },
+      { label: "Giveaway", link: "/app/giveaway", icon: CardGiftcard },
       { label: "Settings", link: "/app/settings", icon: Settings },
     ],
   },

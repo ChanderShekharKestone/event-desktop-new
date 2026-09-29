@@ -13,6 +13,7 @@ const ScanPrint = LazyLoad(lazy(() => import("../pages/scan-print")));
 const Settings = LazyLoad(lazy(() => import("../pages/settings")));
 const ScanKiosk = LazyLoad(lazy(() => import("../pages/scan-kiosk")));
 const RegistrationsConfig = LazyLoad(lazy(() => import("../pages/registrations-config")));
+const Giveaway = LazyLoad(lazy(() => import("../pages/giveaway")));
 const router = createBrowserRouter([
   {
     path: "/",
@@ -54,6 +55,10 @@ const router = createBrowserRouter([
       {
         path: "registrations",
         element: <RegistrationsConfig />,
+      },
+      {
+        path: "giveaway",
+        element: <Giveaway />,
       },
     ],
   },

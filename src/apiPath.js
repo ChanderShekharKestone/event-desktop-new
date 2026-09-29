@@ -47,5 +47,12 @@ export const apiAppResetRestore = "app-reset/restore";
 export const apiAppResetChallenge = "app-reset/challenge";
 export const apiAppResetWipe = "app-reset/wipe";
 
+// Giveaway (stored locally, synced with cloud)
+export const apiGiveaway = "giveaway";
+export const apiGiveawayAttendees = "giveaway/attendees";
+export const apiGiveawayAssign = "giveaway/assign";
+export const apiGiveawayRevert = "giveaway/revert";
+export const apiGiveawayFailed = "giveaway/failed";
+
 // Network
 export const apiLocalIp = "local-ip";

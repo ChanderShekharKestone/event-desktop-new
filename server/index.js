@@ -14,6 +14,7 @@ const SDK_FILES_DIR = process.env.USER_DATA_PATH
 const runMigrations = require("./migrations");
 const { syncFromCloud } = require("./services/cloudSync");
 const { pushLocalChanges } = require("./services/pushSync");
+const { syncGiveaways } = require("./services/giveawaySync");
 
 const app = express();
 // Determine local IP synchronously so the HTTPS cert SAN can include it
@@ -94,6 +95,7 @@ app.use("/api/app-settings", require("./routes/appSettings"));
 app.use("/api/sdk-configs", require("./routes/sdkConfigs"));
 app.use("/api/registration-fields", require("./routes/registrationFields"));
 app.use("/api/app-reset", require("./routes/appReset"));
+app.use("/api/giveaway", require("./routes/giveaway"));
 // Test-data endpoints (seed / wipe) only in development
 if (!process.env.APP_PACKAGED) app.use("/api/seed", require("./routes/seed"));
 
@@ -145,9 +147,14 @@ https.createServer({ key: pems.private, cert: pems.cert }, app).listen(HTTPS_POR
 
 // Background sync intervals
 setInterval(() => syncFromCloud(), 5 * 60 * 1000); // every 5 min
-setInterval(() => pushLocalChanges(), 2 * 60 * 1000); // every 2 min
+// Giveaways sync after registrations are pushed: a new delegate needs its cloudId first
+setInterval(
+  () => pushLocalChanges().catch(() => {}).then(() => syncGiveaways()).catch(() => {}),
+  2 * 60 * 1000,
+); // every 2 min
 
 // Initial cloud sync on startup
 syncFromCloud().catch(console.error);
+syncGiveaways().catch(() => {});
 
 module.exports = app;

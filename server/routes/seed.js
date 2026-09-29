@@ -374,8 +374,12 @@ router.delete("/event", (req, res) => {
       const r7 = db
         .prepare(`DELETE FROM push_pending WHERE eventId = ?`)
         .run(eventId);
+      const r8 = db.prepare(`DELETE FROM giveaways WHERE event_id = ?`).run(eventId);
+      db.prepare(`DELETE FROM giveaway_assignments WHERE event_id = ?`).run(eventId);
+      db.prepare(`DELETE FROM giveaway_ops WHERE event_id = ?`).run(eventId);
       return {
         registrations: r1.changes,
+        giveaways: r8.changes,
         attendeeTypes: r2.changes,
         badgeTemplates: r3.changes,
         registrationForms: r4.changes,

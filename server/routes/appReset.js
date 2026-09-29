@@ -28,6 +28,9 @@ const TABLES = [
   "sync_queue",
   "sync_state",
   "app_settings",
+  "giveaways",
+  "giveaway_assignments",
+  "giveaway_ops",
 ];
 
 // Electron APIs are available because the server runs inside the Electron main
@@ -44,8 +47,10 @@ function getElectron() {
 const listFiles = (dir, ext) =>
   fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(ext)) : [];
 
+// Registrations and giveaway assign/revert not on the cloud yet
 const pendingPushCount = () =>
-  db.prepare("SELECT COUNT(*) AS c FROM push_pending").get().c;
+  db.prepare("SELECT COUNT(*) AS c FROM push_pending").get().c +
+  db.prepare("SELECT COUNT(*) AS c FROM giveaway_ops WHERE status = 'pending'").get().c;
 
 function getSummary() {
   return {
