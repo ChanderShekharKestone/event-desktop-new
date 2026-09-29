@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import {
   AppBar,
   Box,
@@ -17,6 +17,12 @@ const AdminLayout = () => {
   useEffect(() => {
     setOpen(!isMobile);
   }, [isMobile]);
+
+  // On mobile, close the sidebar after navigating to a new page.
+  const { pathname } = useLocation();
+  useEffect(() => {
+    if (isMobile) setOpen(false);
+  }, [pathname, isMobile]);
 
   return (
     <Box sx={{ display: "flex", height: "100vh" }}>
