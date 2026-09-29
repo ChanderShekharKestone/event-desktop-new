@@ -16,6 +16,7 @@ import {
   ListSubheader,
   Checkbox,
   ListItemText,
+  useMediaQuery,
 } from "@mui/material";
 import { Search, FileDownload, Done, Print } from "@mui/icons-material";
 import { DataGrid, useGridApiRef } from "@mui/x-data-grid";
@@ -55,9 +56,108 @@ function avatarColor(name = "") {
   return colors[Math.abs(hash) % colors.length];
 }
 
+const chipSx = {
+  fontWeight: 600,
+  fontSize: "0.7rem",
+  height: 20,
+  borderRadius: "5px",
+};
+
+const TYPE_COLORS = {
+  attendee: { bg: "rgba(32,23,81,0.08)", color: "#201751" },
+  speaker: { bg: "rgba(37,99,235,0.08)", color: "#2563EB" },
+  sponsor: { bg: "rgba(217,119,6,0.08)", color: "#D97706" },
+  delegate: { bg: "rgba(5,150,105,0.08)", color: "#059669" },
+  vip: { bg: "rgba(219,39,119,0.08)", color: "#DB2777" },
+};
+
+function StatusChip({ checkedIn }) {
+  return (
+    <Chip
+      label={checkedIn ? "Checked In" : "Not Checked In"}
+      size="small"
+      sx={{
+        ...chipSx,
+        bgcolor: checkedIn ? "rgba(22,163,74,0.08)" : "rgba(239,68,68,0.08)",
+        color: checkedIn ? "#16A34A" : "#DC2626",
+      }}
+    />
+  );
+}
+
+function TypeChip({ value }) {
+  const t = (value || "attendee").toLowerCase();
+  const c = TYPE_COLORS[t] || {
+    bg: "rgba(107,114,128,0.08)",
+    color: "#6B7280",
+  };
+  return (
+    <Chip
+      label={t}
+      size="small"
+      sx={{
+        ...chipSx,
+        bgcolor: c.bg,
+        color: c.color,
+        textTransform: "capitalize",
+      }}
+    />
+  );
+}
+
+function SourceChip({ value }) {
+  return (
+    <Chip
+      label={value || "Direct"}
+      size="small"
+      sx={{ ...chipSx, bgcolor: "rgba(14,165,233,0.08)", color: "#0369A1" }}
+    />
+  );
+}
+
+function PrintedChip({ value, label }) {
+  return (
+    <Chip
+      label={label ?? (value ? "Yes" : "No")}
+      size="small"
+      sx={{
+        ...chipSx,
+        bgcolor: value ? "rgba(22,163,74,0.08)" : "rgba(156,163,175,0.1)",
+        color: value ? "#16A34A" : "#9CA3AF",
+      }}
+    />
+  );
+}
+
+function ProfessionalInfo({ row, hideEmpty }) {
+  if (!row.organization && !row.designation) {
+    return hideEmpty ? null : (
+      <Typography sx={{ fontSize: 12, color: "#D1D5DB" }}>—</Typography>
+    );
+  }
+  const line = (label, value) => (
+    <Typography sx={{ fontSize: 12, color: "#374151" }}>
+      <Typography
+        component="span"
+        sx={{ fontSize: 11, color: "#9CA3AF", mr: 0.5 }}
+      >
+        {label}
+      </Typography>
+      {value}
+    </Typography>
+  );
+  return (
+    <>
+      {row.organization && line("Org:", row.organization)}
+      {row.designation && line("Desg:", row.designation)}
+    </>
+  );
+}
+
 const Delegates = () => {
   const apiRef = useGridApiRef();
   const hitApi = useApi();
+  const isMobile = useMediaQuery("(max-width:767px)");
   const { badgeTemplatesData, attendeeTypesData } = useSelector(
     (s) => s.mainReducer,
   );
@@ -140,7 +240,12 @@ const Delegates = () => {
   const notify = useCallback(
     (type, description) =>
       directDispatch(
-        { type, title: type === "success" ? "Success" : "Error", description, position: "top-center" },
+        {
+          type,
+          title: type === "success" ? "Success" : "Error",
+          description,
+          position: "top-center",
+        },
         keyNames.toastData,
       ),
     [directDispatch],
@@ -158,7 +263,8 @@ const Delegates = () => {
         fetchDelegates();
         notify(
           "success",
-          `${row.firstName ?? ""} ${row.lastName ?? ""}`.trim() + " marked as present",
+          `${row.firstName ?? ""} ${row.lastName ?? ""}`.trim() +
+            " marked as present",
         );
       } catch (err) {
         console.error("Mark attendance failed:", err.message);
@@ -185,9 +291,12 @@ const Delegates = () => {
           sort,
           order,
           type: typeFilter,
-          isCheckedIn: filters.find((f) => f.startsWith("status:"))?.split(":")[1] ?? "",
-          campaignSource: filters.find((f) => f.startsWith("source:"))?.split(":")[1] ?? "",
-          isPrintClicked: filters.find((f) => f.startsWith("printed:"))?.split(":")[1] ?? "",
+          isCheckedIn:
+            filters.find((f) => f.startsWith("status:"))?.split(":")[1] ?? "",
+          campaignSource:
+            filters.find((f) => f.startsWith("source:"))?.split(":")[1] ?? "",
+          isPrintClicked:
+            filters.find((f) => f.startsWith("printed:"))?.split(":")[1] ?? "",
         },
       });
       const all = data.data || [];
@@ -232,7 +341,138 @@ const Delegates = () => {
     }
   }, [rowCount, debouncedSearch, sortModel, typeFilter, filters]);
 
-  const columns = [
+  const cellBox = (children, extra = {}) => (
+    <Box display="flex" alignItems="center" height="100%" {...extra}>
+      {children}
+    </Box>
+  );
+
+  const actionBtnSx = {
+    width: 30,
+    height: 30,
+    borderRadius: "7px",
+    bgcolor: "rgba(32,23,81,0.08)",
+    color: "#201751",
+    "&:hover": { bgcolor: "rgba(32,23,81,0.16)" },
+    "&.Mui-disabled": {
+      bgcolor: "rgba(32,23,81,0.04)",
+      color: "rgba(32,23,81,0.25)",
+    },
+  };
+
+  const actionsColumn = {
+    field: "actions",
+    headerName: isMobile ? "" : "Actions",
+    width: isMobile ? 52 : 90,
+    sortable: false,
+    renderCell: ({ row }) => (
+      <Box
+        display="flex"
+        flexDirection={isMobile ? "column" : "row"}
+        alignItems="center"
+        justifyContent="center"
+        height="100%"
+        gap={0.75}
+      >
+        <Tooltip
+          title={row.isCheckedIn ? "Already Checked In" : "Mark Attendance"}
+        >
+          <span>
+            <IconButton
+              size="small"
+              onClick={() => markAttendance(row)}
+              disabled={row.isCheckedIn}
+              sx={actionBtnSx}
+            >
+              <Done sx={{ fontSize: 15 }} />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Tooltip
+          title={
+            badgeTemplatesData?.length ? "Print Badge" : "No badge templates"
+          }
+        >
+          <span>
+            <IconButton
+              size="small"
+              onClick={() => setOpenBadge(row)}
+              disabled={!badgeTemplatesData?.length}
+              sx={actionBtnSx}
+            >
+              <Print sx={{ fontSize: 15 }} />
+            </IconButton>
+          </span>
+        </Tooltip>
+      </Box>
+    ),
+  };
+
+  // Mobile: everything merged into one card-like column + actions.
+  const mobileColumns = [
+    {
+      field: "delegate",
+      headerName: "Delegate",
+      flex: 1,
+      minWidth: 0,
+      sortable: false,
+      renderCell: ({ row }) => {
+        const name = `${row.firstName || ""} ${row.lastName || ""}`.trim();
+        const d = row.createdAt ? new Date(row.createdAt) : null;
+        return (
+          <Box display="flex" gap={1.25} py={1.25} width="100%" minWidth={0}>
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                bgcolor: avatarColor(name),
+                fontSize: 12,
+                fontWeight: 700,
+                flexShrink: 0,
+              }}
+            >
+              {getInitials(row.firstName, row.lastName)}
+            </Avatar>
+            <Box
+              minWidth={0}
+              flex={1}
+              display="flex"
+              flexDirection="column"
+              gap={0.4}
+            >
+              <Typography
+                sx={{ fontSize: 13, fontWeight: 600, color: "#111827" }}
+              >
+                {name || "—"}
+              </Typography>
+              <ProfessionalInfo row={row} hideEmpty />
+              <Box display="flex" flexWrap="wrap" gap={0.5} mt={0.25}>
+                <StatusChip checkedIn={row.isCheckedIn} />
+                <TypeChip value={row.type} />
+                <SourceChip value={row.campaignSource} />
+                <PrintedChip
+                  value={row.isPrintClicked}
+                  label={row.isPrintClicked ? "Printed" : "Not Printed"}
+                />
+              </Box>
+              {d && (
+                <Typography sx={{ fontSize: 11, color: "#9CA3AF" }}>
+                  Registered {d.toLocaleDateString("en-CA")}{" "}
+                  {d.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Typography>
+              )}
+            </Box>
+          </Box>
+        );
+      },
+    },
+    actionsColumn,
+  ];
+
+  const desktopColumns = [
     {
       field: "_seq",
       headerName: "#",
@@ -240,14 +480,10 @@ const Delegates = () => {
       sortable: false,
       renderCell: ({ api, row }) => {
         const idx = api.getAllRowIds().indexOf(row.id);
-        return (
-          <Box display="flex" alignItems="center" height="100%">
-            <Typography
-              sx={{ fontSize: 13, color: "#9CA3AF", fontWeight: 500 }}
-            >
-              {paginationModel.page * paginationModel.pageSize + idx + 1}
-            </Typography>
-          </Box>
+        return cellBox(
+          <Typography sx={{ fontSize: 13, color: "#9CA3AF", fontWeight: 500 }}>
+            {paginationModel.page * paginationModel.pageSize + idx + 1}
+          </Typography>,
         );
       },
     },
@@ -256,30 +492,8 @@ const Delegates = () => {
       headerName: "Status",
       width: 130,
       sortable: false,
-      renderCell: ({ row }) => (
-        <Box
-          display="flex"
-          flexDirection="column"
-          gap={0.5}
-          justifyContent="center"
-          height="100%"
-        >
-          <Chip
-            label={row.isCheckedIn ? "Checked In" : "Not Checked In"}
-            size="small"
-            sx={{
-              bgcolor: row.isCheckedIn
-                ? "rgba(22,163,74,0.08)"
-                : "rgba(239,68,68,0.08)",
-              color: row.isCheckedIn ? "#16A34A" : "#DC2626",
-              fontWeight: 600,
-              fontSize: "0.7rem",
-              height: 20,
-              borderRadius: "5px",
-            }}
-          />
-        </Box>
-      ),
+      renderCell: ({ row }) =>
+        cellBox(<StatusChip checkedIn={row.isCheckedIn} />),
     },
     {
       field: "personalInfo",
@@ -289,14 +503,13 @@ const Delegates = () => {
       sortable: false,
       renderCell: ({ row }) => {
         const name = `${row.firstName || ""} ${row.lastName || ""}`.trim();
-        const color = avatarColor(name);
         return (
           <Box display="flex" alignItems="center" gap={1.5} height="100%">
             <Avatar
               sx={{
                 width: 34,
                 height: 34,
-                bgcolor: color,
+                bgcolor: avatarColor(name),
                 fontSize: 13,
                 fontWeight: 700,
                 flexShrink: 0,
@@ -335,31 +548,7 @@ const Delegates = () => {
           height="100%"
           gap={0.3}
         >
-          {row.organization && (
-            <Typography sx={{ fontSize: 12, color: "#374151" }}>
-              <Typography
-                component="span"
-                sx={{ fontSize: 11, color: "#9CA3AF", mr: 0.5 }}
-              >
-                Org:
-              </Typography>
-              {row.organization}
-            </Typography>
-          )}
-          {row.designation && (
-            <Typography sx={{ fontSize: 12, color: "#374151" }}>
-              <Typography
-                component="span"
-                sx={{ fontSize: 11, color: "#9CA3AF", mr: 0.5 }}
-              >
-                Desg:
-              </Typography>
-              {row.designation}
-            </Typography>
-          )}
-          {!row.organization && !row.designation && (
-            <Typography sx={{ fontSize: 12, color: "#D1D5DB" }}>—</Typography>
-          )}
+          <ProfessionalInfo row={row} />
         </Box>
       ),
     },
@@ -368,81 +557,21 @@ const Delegates = () => {
       headerName: "Type",
       width: 110,
       sortable: false,
-      renderCell: ({ value }) => {
-        const TYPE_COLORS = {
-          attendee: { bg: "rgba(32,23,81,0.08)", color: "#201751" },
-          speaker: { bg: "rgba(37,99,235,0.08)", color: "#2563EB" },
-          sponsor: { bg: "rgba(217,119,6,0.08)", color: "#D97706" },
-          delegate: { bg: "rgba(5,150,105,0.08)", color: "#059669" },
-          vip: { bg: "rgba(219,39,119,0.08)", color: "#DB2777" },
-        };
-        const t = (value || "attendee").toLowerCase();
-        const c = TYPE_COLORS[t] || {
-          bg: "rgba(107,114,128,0.08)",
-          color: "#6B7280",
-        };
-        return (
-          <Box display="flex" alignItems="center" height="100%">
-            <Chip
-              label={t}
-              size="small"
-              sx={{
-                bgcolor: c.bg,
-                color: c.color,
-                fontWeight: 600,
-                fontSize: "0.7rem",
-                height: 20,
-                borderRadius: "5px",
-                textTransform: "capitalize",
-              }}
-            />
-          </Box>
-        );
-      },
+      renderCell: ({ value }) => cellBox(<TypeChip value={value} />),
     },
     {
       field: "campaignSource",
       headerName: "Source",
       width: 110,
       sortable: false,
-      renderCell: ({ value }) => (
-        <Box display="flex" alignItems="center" height="100%">
-          <Chip
-            label={value || "Direct"}
-            size="small"
-            sx={{
-              bgcolor: "rgba(14,165,233,0.08)",
-              color: "#0369A1",
-              fontWeight: 600,
-              fontSize: "0.7rem",
-              height: 20,
-              borderRadius: "5px",
-            }}
-          />
-        </Box>
-      ),
+      renderCell: ({ value }) => cellBox(<SourceChip value={value} />),
     },
     {
       field: "isPrintClicked",
       headerName: "Printed",
       width: 90,
       sortable: false,
-      renderCell: ({ value }) => (
-        <Box display="flex" alignItems="center" height="100%">
-          <Chip
-            label={value ? "Yes" : "No"}
-            size="small"
-            sx={{
-              bgcolor: value ? "rgba(22,163,74,0.08)" : "rgba(156,163,175,0.1)",
-              color: value ? "#16A34A" : "#9CA3AF",
-              fontWeight: 600,
-              fontSize: "0.7rem",
-              height: 20,
-              borderRadius: "5px",
-            }}
-          />
-        </Box>
-      ),
+      renderCell: ({ value }) => cellBox(<PrintedChip value={value} />),
     },
     {
       field: "createdAt",
@@ -450,10 +579,8 @@ const Delegates = () => {
       width: 180,
       renderCell: ({ value }) => {
         if (!value)
-          return (
-            <Box display="flex" alignItems="center" height="100%">
-              <Typography sx={{ fontSize: 12, color: "#9CA3AF" }}>—</Typography>
-            </Box>
+          return cellBox(
+            <Typography sx={{ fontSize: 12, color: "#9CA3AF" }}>—</Typography>,
           );
         const d = new Date(value);
         return (
@@ -475,69 +602,10 @@ const Delegates = () => {
         );
       },
     },
-    {
-      field: "actions",
-      headerName: "Actions",
-      width: 90,
-      sortable: false,
-      renderCell: ({ row }) => (
-        <Box display="flex" alignItems="center" height="100%" gap={0.75}>
-          <Tooltip
-            title={row.isCheckedIn ? "Already Checked In" : "Mark Attendance"}
-          >
-            <span>
-              <IconButton
-                size="small"
-                onClick={() => markAttendance(row)}
-                disabled={row.isCheckedIn}
-                sx={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: "7px",
-                  bgcolor: "rgba(32,23,81,0.08)",
-                  color: "#201751",
-                  "&:hover": { bgcolor: "rgba(32,23,81,0.16)" },
-                  "&.Mui-disabled": {
-                    bgcolor: "rgba(32,23,81,0.04)",
-                    color: "rgba(32,23,81,0.25)",
-                  },
-                }}
-              >
-                <Done sx={{ fontSize: 15 }} />
-              </IconButton>
-            </span>
-          </Tooltip>
-          <Tooltip
-            title={
-              badgeTemplatesData?.length ? "Print Badge" : "No badge templates"
-            }
-          >
-            <span>
-              <IconButton
-                size="small"
-                onClick={() => setOpenBadge(row)}
-                disabled={!badgeTemplatesData?.length}
-                sx={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: "7px",
-                  bgcolor: "rgba(32,23,81,0.08)",
-                  color: "#201751",
-                  "&:hover": { bgcolor: "rgba(32,23,81,0.16)" },
-                  "&.Mui-disabled": {
-                    bgcolor: "rgba(32,23,81,0.04)",
-                    color: "rgba(32,23,81,0.25)",
-                  },
-                }}
-              >
-                <Print sx={{ fontSize: 15 }} />
-              </IconButton>
-            </span>
-          </Tooltip>
-        </Box>
-      ),
-    },
+    actionsColumn,
   ];
+
+  const columns = isMobile ? mobileColumns : desktopColumns;
 
   return (
     <Box>
@@ -564,11 +632,13 @@ const Delegates = () => {
         {/* Header */}
         <Box
           sx={{
-            px: 3,
+            px: isMobile ? 2 : 3,
             py: 2,
             display: "flex",
-            alignItems: "center",
+            flexDirection: isMobile ? "column" : "row",
+            alignItems: isMobile ? "stretch" : "center",
             justifyContent: "space-between",
+            gap: isMobile ? 1.5 : 0,
             borderBottom: "1px solid rgba(0,0,0,0.07)",
           }}
         >
@@ -593,8 +663,16 @@ const Delegates = () => {
               </Typography>
             </Box>
           </Box>
-          <Box display="flex" gap={1.5} alignItems="center">
-            <FormControl size="small" sx={{ minWidth: 130 }}>
+          <Box
+            display="flex"
+            gap={isMobile ? 1 : 1.5}
+            alignItems="center"
+            flexWrap={isMobile ? "wrap" : "nowrap"}
+          >
+            <FormControl
+              size="small"
+              sx={{ minWidth: 130, flex: isMobile ? 1 : "none" }}
+            >
               <Select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
@@ -625,7 +703,13 @@ const Delegates = () => {
                 ))}
               </Select>
             </FormControl>
-            <FormControl size="small" sx={{ minWidth: 150 }}>
+            <FormControl
+              size="small"
+              sx={{
+                minWidth: isMobile ? 120 : 150,
+                flex: isMobile ? 1 : "none",
+              }}
+            >
               <Select
                 multiple
                 value={filters}
@@ -784,7 +868,8 @@ const Delegates = () => {
                 },
               }}
               sx={{
-                width: 240,
+                width: isMobile ? "100%" : 240,
+                order: isMobile ? -1 : 0,
                 "& .MuiOutlinedInput-root": {
                   borderRadius: "8px",
                   fontSize: 13,
@@ -841,6 +926,7 @@ const Delegates = () => {
           disableRowSelectionOnClick
           disableColumnMenu
           rowHeight={64}
+          getRowHeight={isMobile ? () => "auto" : undefined}
           sx={{
             border: "none",
             "& .MuiDataGrid-columnHeaders": {
@@ -863,6 +949,15 @@ const Delegates = () => {
             "& .MuiDataGrid-footerContainer": {
               borderTop: "1px solid rgba(0,0,0,0.07)",
             },
+            ...(isMobile && {
+              "& .MuiDataGrid-cell": {
+                borderBottom: "none",
+                alignItems: "center",
+                whiteSpace: "normal",
+              },
+              "& .MuiTablePagination-selectLabel": { display: "none" },
+              "& .MuiTablePagination-toolbar": { px: 1 },
+            }),
           }}
         />
       </Box>
