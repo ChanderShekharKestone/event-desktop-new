@@ -35,9 +35,8 @@ const toast = getToast("error");
 const Scan = () => {
   const hitApi = useApi();
   const directDispatch = useDirect();
-  const { userScanData, attendeeTypesData, badgeTemplatesData, isLoading } = useSelector(
-    (s) => s.mainReducer,
-  );
+  const { userScanData, attendeeTypesData, badgeTemplatesData, isLoading } =
+    useSelector((s) => s.mainReducer);
 
   // Merge badge templates into scan data — same pattern as live-admin
   const enrichedScanData = userScanData
@@ -73,7 +72,7 @@ const Scan = () => {
   const [email, setEmail] = useState(null);
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const { badge, cardRef, isPrinting } = useAutoPrint({
+  const { badge, cardRef, isPrinting, printingUser } = useAutoPrint({
     userScanData: enrichedScanData,
     directDispatch,
     keyName: keyNames.userScanData,
@@ -95,9 +94,29 @@ const Scan = () => {
   }, [userScanData, badgeTemplatesData, directDispatch]);
 
   useEffect(() => {
-    hitApi(apiAttendeeTypes, null, method.get, keyNames.attendeeTypesData, null);
-    hitApi(apiBadgeTemplates, null, method.get, keyNames.badgeTemplatesData, null);
+    hitApi(
+      apiAttendeeTypes,
+      null,
+      method.get,
+      keyNames.attendeeTypesData,
+      null,
+    );
+    hitApi(
+      apiBadgeTemplates,
+      null,
+      method.get,
+      keyNames.badgeTemplatesData,
+      null,
+    );
   }, [hitApi]);
+
+  const types = attendeeTypesData?.data || attendeeTypesData || [];
+  const printingKey = (
+    printingUser?.type || printingUser?.roleId
+  )?.toLowerCase();
+  const printingType = printingKey
+    ? types.find((t) => t.name?.toLowerCase() === printingKey)
+    : null;
 
   const handleSearch = () => {
     if (isValidEmail) {
@@ -139,7 +158,11 @@ const Scan = () => {
         />
       )}
 
-      <BadgePreview badge={badge} userInfo={enrichedScanData?.userInfo} cardRef={cardRef} />
+      <BadgePreview
+        badge={badge}
+        userInfo={enrichedScanData?.userInfo}
+        cardRef={cardRef}
+      />
 
       <Snackbar
         open={noBadgeAlert}
@@ -147,7 +170,11 @@ const Scan = () => {
         onClose={() => setNoBadgeAlert(false)}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert severity="warning" onClose={() => setNoBadgeAlert(false)} sx={{ width: "100%" }}>
+        <Alert
+          severity="warning"
+          onClose={() => setNoBadgeAlert(false)}
+          sx={{ width: "100%" }}
+        >
           No badge template found. Please pull badge templates from Settings.
         </Alert>
       </Snackbar>
@@ -162,20 +189,89 @@ const Scan = () => {
           zIndex: 1,
         }}
       >
-        <Dialog open={isPrinting}>
+        <Dialog
+          open={isPrinting}
+          PaperProps={{
+            sx: { borderRadius: 3, overflow: "hidden", minWidth: 480 },
+          }}
+        >
           <DialogContent sx={{ textAlign: "center", p: 7 }}>
             <CircularProgress />
             <Typography variant="h4" mt={2}>
               Printing in progress… <br />
               please wait
             </Typography>
+            {console.log(printingType, "printingType")}
           </DialogContent>
+          {printingType && (
+            <Box
+              display="flex"
+              sx={{
+                borderTop: "1px solid rgba(32,23,81,0.12)",
+                bgcolor: "rgba(32,23,81,0.04)",
+              }}
+            >
+              <Box flex={1} px={3} py={2} textAlign="center">
+                <Typography variant="body2" color="text.secondary">
+                  Attendee Type
+                </Typography>
+                <Typography
+                  variant="h6"
+                  fontWeight={700}
+                  sx={{ color: "#201751" }}
+                >
+                  {printingType.displayName}
+                </Typography>
+              </Box>
+              <Divider orientation="vertical" flexItem />
+              <Box flex={1} px={3} py={2} textAlign="center">
+                <Typography variant="body2" color="text.secondary">
+                  Lanyard
+                </Typography>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  gap={1}
+                >
+                  {printingType.color && (
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        flexShrink: 0,
+                        bgcolor: printingType.color,
+                        border: "1px solid rgba(0,0,0,0.2)",
+                      }}
+                    />
+                  )}
+                  <Typography
+                    variant="h6"
+                    fontWeight={700}
+                    sx={{ color: "#201751" }}
+                  >
+                    {printingType.colorName || printingType.color || "—"}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          )}
         </Dialog>
 
-        <Typography textAlign="center" variant="h5" fontWeight={700} gutterBottom>
+        <Typography
+          textAlign="center"
+          variant="h5"
+          fontWeight={700}
+          gutterBottom
+        >
           {showSearch ? "Search Manually" : "Scan Your QR Code"}
         </Typography>
-        <Typography textAlign="center" variant="h6" color="text.secondary" mb={3}>
+        <Typography
+          textAlign="center"
+          variant="h6"
+          color="text.secondary"
+          mb={3}
+        >
           Position the QR code within the frame to check in automatically
         </Typography>
 
@@ -196,7 +292,12 @@ const Scan = () => {
                 position: "relative",
               }}
             />
-            <Button variant="contained" size="large" fullWidth onClick={isScanning ? resetScanner : startScanning}>
+            <Button
+              variant="contained"
+              size="large"
+              fullWidth
+              onClick={isScanning ? resetScanner : startScanning}
+            >
               {isScanning ? "Stop Scanning" : "Scan QR Code"}
             </Button>
           </>

@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const axios = require("axios");
 const {
-  upsertAttendeeTypes,
+  replaceAttendeeTypes,
   getAttendeeTypes,
 } = require("../database/attendeeTypes");
 const settings = require("../settings");
@@ -27,13 +27,14 @@ router.post("/pull", async (_req, res) => {
     }
 
     const response = await axios.get(`${CLOUD_BASE}/attendee-types/${eventId}`, { headers: CLOUD_HEADERS });
-    const types = response.data.data || [];
+    const types = response.data?.data;
+    if (!Array.isArray(types)) throw new Error("Invalid attendee types response from cloud");
 
-    if (types.length) upsertAttendeeTypes(types);
+    replaceAttendeeTypes(eventId, types);
     res.json({
       status: 200,
-      message: `Pulled ${types.length} attendee types`,
-      data: types,
+      message: `Synced ${types.length} attendee types`,
+      data: getAttendeeTypes(eventId),
     });
   } catch (err) {
     res.status(500).json({ status: 500, message: err.message, data: null });

@@ -12,6 +12,8 @@ const useAutoPrint = ({
   const cardRef = useRef(null);
   const [badge, setBadge] = useState(null);
   const [isPrinting, setIsPrinting] = useState(false);
+  // Snapshot of the user being printed — userScanData is cleared before the popup closes
+  const [printingUser, setPrintingUser] = useState(null);
 
   const { pageStyle } = useBadgePrint(badge);
 
@@ -39,12 +41,13 @@ const useAutoPrint = ({
   /* ---------- auto print ---------- */
   useEffect(() => {
     if (userScanData?.userInfo && badge) {
+      setPrintingUser(userScanData.userInfo);
       setIsPrinting(true);
       handlePrint();
     }
   }, [userScanData, badge, handlePrint]);
 
-  return { badge, cardRef, isPrinting };
+  return { badge, cardRef, isPrinting, printingUser };
 };
 
 export default useAutoPrint;

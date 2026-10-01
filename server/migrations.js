@@ -297,6 +297,17 @@ function runMigrations() {
     )`,
   ).run();
 
+  // Add color column to attendee_types if missing
+  {
+    const cols = db.prepare("PRAGMA table_info(attendee_types)").all().map((c) => c.name);
+    if (!cols.includes("color")) {
+      db.prepare(`ALTER TABLE attendee_types ADD COLUMN color TEXT`).run();
+    }
+    if (!cols.includes("color_name")) {
+      db.prepare(`ALTER TABLE attendee_types ADD COLUMN color_name TEXT`).run();
+    }
+  }
+
   // Add alignment column to badge_templates if missing
   {
     const cols = db.prepare("PRAGMA table_info(badge_templates)").all().map((c) => c.name);

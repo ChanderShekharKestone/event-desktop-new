@@ -1,16 +1,19 @@
 const { db } = require("../db");
 
-function upsertBadgeTemplates(templates) {
+// Mirror cloud: replace all rows for this event so cloud deletions are removed locally.
+function replaceBadgeTemplates(eventId, templates) {
+  const del = db.prepare(`DELETE FROM badge_templates WHERE event_id = ?`);
   const stmt = db.prepare(
     `INSERT OR REPLACE INTO badge_templates (cloud_id, event_id, name, type, width, height, bg_img, font_family, elements, alignment, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
-  const upsertMany = db.transaction((rows) => {
+  const replaceAll = db.transaction((rows) => {
+    del.run(eventId);
     for (const r of rows) {
       stmt.run(
         r._id,
-        r.eventId,
+        eventId,
         r.name,
         r.type,
         r.width || 320,
@@ -25,7 +28,7 @@ function upsertBadgeTemplates(templates) {
     }
   });
 
-  upsertMany(templates);
+  replaceAll(templates);
 }
 
 function getBadgeTemplates(eventId = null) {
@@ -47,4 +50,4 @@ function getBadgeTemplates(eventId = null) {
   }));
 }
 
-module.exports = { upsertBadgeTemplates, getBadgeTemplates };
+module.exports = { replaceBadgeTemplates, getBadgeTemplates };

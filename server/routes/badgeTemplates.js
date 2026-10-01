@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const axios = require("axios");
 const {
-  upsertBadgeTemplates,
+  replaceBadgeTemplates,
   getBadgeTemplates,
 } = require("../database/badgeTemplates");
 const settings = require("../settings");
@@ -28,12 +28,14 @@ router.post("/pull", async (_req, res) => {
 
     const response = await axios.get(`${CLOUD_BASE}/badge-templates/${eventId}`, { headers: CLOUD_HEADERS });
 
-    const templates = response.data.data || [];
-    if (templates.length) upsertBadgeTemplates(templates);
+    const templates = response.data?.data;
+    if (!Array.isArray(templates)) throw new Error("Invalid badge templates response from cloud");
+
+    replaceBadgeTemplates(eventId, templates);
     res.json({
       status: 200,
-      message: `Pulled ${templates.length} badge templates`,
-      data: templates,
+      message: `Synced ${templates.length} badge templates`,
+      data: getBadgeTemplates(eventId),
     });
   } catch (err) {
     res.status(500).json({ status: 500, message: err.message, data: null });

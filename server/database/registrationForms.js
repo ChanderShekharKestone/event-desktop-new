@@ -1,6 +1,8 @@
 const { db } = require("../db");
 
-function upsertRegistrationForms(forms) {
+// Mirror cloud: replace all rows for this event so cloud deletions are removed locally.
+function replaceRegistrationForms(eventId, forms) {
+  const del = db.prepare(`DELETE FROM registration_forms WHERE event_id = ?`);
   const stmt = db.prepare(
     `INSERT OR REPLACE INTO registration_forms (
       cloud_id, event_id, attendee_type_name, type,
@@ -10,11 +12,12 @@ function upsertRegistrationForms(forms) {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
 
-  const upsertMany = db.transaction((rows) => {
+  const replaceAll = db.transaction((rows) => {
+    del.run(eventId);
     for (const r of rows) {
       stmt.run(
         String(r._id),
-        r.eventId ? String(r.eventId) : null,
+        eventId,
         r.attendeeTypeName,
         r.type || "type1",
         r.isRegistrationPageRequired ? 1 : 0,
@@ -31,7 +34,7 @@ function upsertRegistrationForms(forms) {
     }
   });
 
-  upsertMany(forms);
+  replaceAll(forms);
 }
 
 function getRegistrationForms(eventId = null) {
@@ -71,4 +74,4 @@ function getRegistrationFormByAttendeeType(attendeeTypeName, eventId = null) {
   return row ? rowToObject(row) : null;
 }
 
-module.exports = { upsertRegistrationForms, getRegistrationForms, getRegistrationFormByAttendeeType };
+module.exports = { replaceRegistrationForms, getRegistrationForms, getRegistrationFormByAttendeeType };

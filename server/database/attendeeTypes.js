@@ -1,18 +1,23 @@
 const { db } = require("../db");
 
-function upsertAttendeeTypes(types) {
+// Mirror cloud: replace all rows for this event so cloud deletions are removed locally.
+function replaceAttendeeTypes(eventId, types) {
+  const del = db.prepare(`DELETE FROM attendee_types WHERE event_id = ?`);
   const stmt = db.prepare(
-    `INSERT OR REPLACE INTO attendee_types (cloud_id, event_id, name, display_name, is_active, can_be_deleted, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT OR REPLACE INTO attendee_types (cloud_id, event_id, name, display_name, color, color_name, is_active, can_be_deleted, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
-  const upsertMany = db.transaction((rows) => {
+  const replaceAll = db.transaction((rows) => {
+    del.run(eventId);
     for (const r of rows) {
       stmt.run(
         r._id,
-        r.eventId,
+        eventId,
         r.name,
         r.displayName,
+        r.color || null,
+        r.colorName || null,
         r.isActive ? 1 : 0,
         r.canBeDeleted ? 1 : 0,
         r.createdAt,
@@ -21,7 +26,7 @@ function upsertAttendeeTypes(types) {
     }
   });
 
-  upsertMany(types);
+  replaceAll(types);
 }
 
 function getAttendeeTypes(eventId = null) {
@@ -31,6 +36,8 @@ function getAttendeeTypes(eventId = null) {
     _id: r.cloud_id,
     name: r.name,
     displayName: r.display_name,
+    color: r.color,
+    colorName: r.color_name,
     isActive: Boolean(r.is_active),
     canBeDeleted: Boolean(r.can_be_deleted),
     eventId: r.event_id,
@@ -39,4 +46,4 @@ function getAttendeeTypes(eventId = null) {
   }));
 }
 
-module.exports = { upsertAttendeeTypes, getAttendeeTypes };
+module.exports = { replaceAttendeeTypes, getAttendeeTypes };

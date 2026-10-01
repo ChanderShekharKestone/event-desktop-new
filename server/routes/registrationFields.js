@@ -2,7 +2,7 @@ const router = require("express").Router();
 const axios = require("axios");
 const settings = require("../settings");
 const {
-  upsertRegistrationForms,
+  replaceRegistrationForms,
   getRegistrationForms,
   getRegistrationFormByAttendeeType,
 } = require("../database/registrationForms");
@@ -51,12 +51,14 @@ router.post("/pull", async (_req, res) => {
       `${CLOUD_BASE}/registration-fields/${eventId}`,
       { headers: CLOUD_HEADERS },
     );
-    const forms = data.data || [];
-    if (forms.length) upsertRegistrationForms(forms);
+    const forms = data?.data;
+    if (!Array.isArray(forms)) throw new Error("Invalid registration forms response from cloud");
+
+    replaceRegistrationForms(eventId, forms);
     res.json({
       status: 200,
-      message: `Pulled ${forms.length} registration forms`,
-      data: forms,
+      message: `Synced ${forms.length} registration forms`,
+      data: getRegistrationForms(eventId),
     });
   } catch (err) {
     const status = err.response?.status || 500;
