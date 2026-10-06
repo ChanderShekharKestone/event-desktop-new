@@ -53,6 +53,7 @@ export const apiGiveawayAttendees = "giveaway/attendees";
 export const apiGiveawayAssign = "giveaway/assign";
 export const apiGiveawayRevert = "giveaway/revert";
 export const apiGiveawayFailed = "giveaway/failed";
+export const apiGiveawaySync = "giveaway/sync";
 
 // Network
 export const apiLocalIp = "local-ip";

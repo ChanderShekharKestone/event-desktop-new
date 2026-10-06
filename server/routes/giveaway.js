@@ -8,6 +8,7 @@ const {
   clearFailedOps,
   getSyncStatus,
 } = require("../database/giveaways");
+const { syncGiveaways } = require("../services/giveawaySync");
 
 const requireEvent = (res) => {
   const eventId = settings.get("eventId");
@@ -65,6 +66,19 @@ const handle = (fn, okMessage) => (req, res) => {
 };
 router.post("/assign", handle(assignGiveaway, "Giveaway assigned"));
 router.post("/revert", handle(revertGiveaway, "Giveaway reverted"));
+
+// POST /api/giveaway/sync — push queued assign/revert, then pull the cloud giveaways.
+// 502 when the cloud can't be reached; local data stays as it is.
+router.post("/sync", async (_req, res) => {
+  try {
+    const eventId = requireEvent(res);
+    if (!eventId) return;
+    const data = await syncGiveaways();
+    res.json({ status: 200, message: "Giveaways synced", data });
+  } catch (err) {
+    res.status(502).json({ status: 502, message: err.message || "Cloud sync failed", data: null });
+  }
+});
 
 // DELETE /api/giveaway/failed — dismiss changes the cloud rejected
 router.delete("/failed", (_req, res) => {

@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
+  Button,
   Chip,
+  CircularProgress,
   InputBase,
   Tooltip,
   Typography,
   useMediaQuery,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { Search } from "@mui/icons-material";
+import { Refresh, Search } from "@mui/icons-material";
 import axios from "axios";
 import useDebounce from "../../hooks/useDebounce";
 import useDirect from "../../hooks/useDirect";
@@ -19,6 +21,7 @@ import {
   apiGiveawayAssign,
   apiGiveawayRevert,
   apiGiveawayFailed,
+  apiGiveawaySync,
 } from "../../apiPath";
 import keyNames from "../../keyName";
 import { getColumns } from "./columns";
@@ -40,6 +43,7 @@ const Giveaway = () => {
   const [attendees, setAttendees] = useState({ list: [], total: 0 });
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [search, setSearch] = useState("");
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const debouncedSearch = useDebounce(search.trim(), 350);
@@ -84,8 +88,37 @@ const Giveaway = () => {
 
   const reload = useCallback(() => Promise.all([loadGiveaways(), loadAttendees()]), [loadGiveaways, loadAttendees]);
 
+  // Push queued changes + pull cloud giveaways; quiet = no toast (page open)
+  const syncWithCloud = useCallback(
+    async (quiet) => {
+      setSyncing(true);
+      try {
+        await axios.post(`${apiPath}${apiGiveawaySync}`);
+        if (!quiet) notify("success", "Giveaways synced with the cloud");
+      } catch (err) {
+        if (!quiet) {
+          const res = err.response;
+          notify("error", res ? res.data?.message || `Sync failed (error ${res.status})` : OFFLINE_MSG);
+        }
+      } finally {
+        await reload();
+        setSyncing(false);
+      }
+    },
+    [notify, reload],
+  );
+
+  // Show local data straight away, then sync with the cloud once on open
   useEffect(() => {
     loadGiveaways();
+    syncWithCloud(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Pick up the background sync (every 2 min on the server)
+  useEffect(() => {
+    const t = setInterval(loadGiveaways, 30 * 1000);
+    return () => clearInterval(t);
   }, [loadGiveaways]);
 
   useEffect(() => {
@@ -194,6 +227,16 @@ const Giveaway = () => {
                 />
               </Tooltip>
             )}
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => syncWithCloud(false)}
+              disabled={syncing}
+              startIcon={syncing ? <CircularProgress size={14} /> : <Refresh />}
+              sx={{ textTransform: "none", fontSize: 12, whiteSpace: "nowrap" }}
+            >
+              {syncing ? "Syncing…" : "Refresh"}
+            </Button>
           </Box>
         </Box>
         {/* Stock summary */}
