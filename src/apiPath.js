@@ -34,6 +34,7 @@ export const apiBadgeTemplatesPull = "badge-templates/pull";
 // SDK Configs (Registrations)
 export const apiSdkConfigs = "sdk-configs";
 export const apiRegistrationFields = "registration-fields";
+export const apiFormHeadings = "form-headings";
 export const apiRegistrationFieldsPull = "registration-fields/pull";
 
 // Scan & Check-in

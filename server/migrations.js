@@ -469,6 +469,26 @@ function runMigrations() {
       created_at TEXT NOT NULL
     )`,
   ).run();
+
+  // Heading / subheading shown above each registration form. Local only: never
+  // pushed to cloud, and kept apart from registration_forms so a pull does not wipe it.
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS form_headings (
+      event_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      heading TEXT NOT NULL DEFAULT '',
+      subheading TEXT NOT NULL DEFAULT '',
+      css_urls TEXT NOT NULL DEFAULT '[]',
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (event_id, type)
+    )`,
+  ).run();
+  {
+    const cols = db.prepare("PRAGMA table_info(form_headings)").all().map((c) => c.name);
+    if (!cols.includes("css_urls")) {
+      db.prepare(`ALTER TABLE form_headings ADD COLUMN css_urls TEXT NOT NULL DEFAULT '[]'`).run();
+    }
+  }
 }
 
 module.exports = runMigrations;

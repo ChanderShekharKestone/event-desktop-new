@@ -69,6 +69,7 @@ const LAN_ALLOWED = [
   ["GET", /^\/api\/health$/],
   ["GET", /^\/api\/sdk-configs$/],
   ["GET", /^\/api\/registration-fields\/by-type\/[^/]+$/],
+  ["GET", /^\/api\/form-headings\/[^/]+$/],
   ["POST", /^\/api\/registrations$/],
   ["GET", /^\/api\/attendee-types$/],
   ["GET", /^\/api\/badge-templates$/],
@@ -96,6 +97,7 @@ app.use("/api/sdk-configs", require("./routes/sdkConfigs"));
 app.use("/api/registration-fields", require("./routes/registrationFields"));
 app.use("/api/app-reset", require("./routes/appReset"));
 app.use("/api/giveaway", require("./routes/giveaway"));
+app.use("/api/form-headings", require("./routes/formHeadings"));
 // Test-data endpoints (seed / wipe) only in development
 if (!process.env.APP_PACKAGED) app.use("/api/seed", require("./routes/seed"));
 
