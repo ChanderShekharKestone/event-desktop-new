@@ -1,6 +1,6 @@
 /**
- * Lead capture cloud sync with the diy-ui api (routes/offlineLeadCapture.routes.js,
- * controllers/offlineLeadCapture.controller.js — merge rules are documented there).
+ * Lead capture cloud sync with the offline API (VosmosVirtualEvents routes/Offline.js,
+ * controllers/offlineLeadCapture.js — merge rules are documented there).
  *
  *   GET  {LEAD_CLOUD_BASE}/:eventId  → points, sessions, visits, leads, event name / zone
  *   POST {LEAD_CLOUD_BASE}/push      → { done, rejected, leadIds }
