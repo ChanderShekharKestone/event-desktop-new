@@ -28,7 +28,8 @@ async function pushLocalChanges() {
         continue;
       }
 
-      const { _id, createdAt, updatedAt, cloudId, ...payload } =
+      // uniqueUserId is set by the cloud only (immutable, unique there) — never send it
+      const { _id, createdAt, updatedAt, cloudId, uniqueUserId, ...payload } =
         rowToObject(row);
 
       if (!row.cloudId) {

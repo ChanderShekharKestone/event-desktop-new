@@ -128,16 +128,16 @@ function getAttendees(eventId, { page = 1, limit = 10, q = "" }) {
   const tokens = q.trim() ? q.trim().split(/\s+/) : [];
   for (const t of tokens) {
     conditions.push(
-      `(firstName LIKE ? OR lastName LIKE ? OR email LIKE ? OR mobile LIKE ? OR organization LIKE ? OR designation LIKE ? OR type LIKE ?)`,
+      `(firstName LIKE ? OR lastName LIKE ? OR email LIKE ? OR mobile LIKE ? OR organization LIKE ? OR designation LIKE ? OR type LIKE ? OR uniqueUserId LIKE ?)`,
     );
-    params.push(...Array(7).fill(`%${t}%`));
+    params.push(...Array(8).fill(`%${t}%`));
   }
   const where = `WHERE ${conditions.join(" AND ")}`;
 
   const total = db.prepare(`SELECT COUNT(*) AS c FROM registrations ${where}`).get(params).c;
   const rows = db
     .prepare(
-      `SELECT id, cloudId, firstName, lastName, email, organization, designation, type, roleId
+      `SELECT id, cloudId, uniqueUserId, firstName, lastName, email, organization, designation, type, roleId
        FROM registrations ${where} ORDER BY id DESC LIMIT ? OFFSET ?`,
     )
     .all([...params, limit, (page - 1) * limit]);

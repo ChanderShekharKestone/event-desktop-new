@@ -74,6 +74,7 @@ const LAN_ALLOWED = [
   ["GET", /^\/api\/attendee-types$/],
   ["GET", /^\/api\/badge-templates$/],
   ["POST", /^\/api\/scan\/(checkin|search)$/],
+  ["GET", /^\/api\/scan\/delegates$/],
 ];
 const LOOPBACK = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
 

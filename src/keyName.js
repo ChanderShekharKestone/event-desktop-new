@@ -17,6 +17,7 @@ const keyNames = {
   activationData: "activationData",
   machineId: "machineId",
   userScanData: "userScanData",
+  scanSearchResults: "scanSearchResults",
   attendeeTypesData: "attendeeTypesData",
   badgeTemplatesData: "badgeTemplatesData",
   syncPendingCount: "syncPendingCount",

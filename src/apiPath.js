@@ -40,6 +40,7 @@ export const apiRegistrationFieldsPull = "registration-fields/pull";
 // Scan & Check-in
 export const apiUserScan = "scan/checkin";
 export const apiUserSearch = "scan/search";
+export const apiScanDelegates = "scan/delegates";
 
 // Backup / Restore / Clean all data (host PC only)
 export const apiAppResetSummary = "app-reset/summary";

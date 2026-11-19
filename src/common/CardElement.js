@@ -66,9 +66,12 @@ const CardElement = ({ el, userInfo, canvasWidth = 300 }) => {
         )
       ) : el.type === "qrCode" ? (
         <QRCode
-          value={JSON.stringify({
-            id: userInfo?.cloudId || userInfo?._id,
-          })}
+          // Same as cloud badges: uniqueUserId when the delegate has one; otherwise
+          // the older JSON form (walk-ins have no uniqueUserId, maybe no cloudId yet)
+          value={
+            userInfo?.uniqueUserId ||
+            JSON.stringify({ id: userInfo?.cloudId || userInfo?._id })
+          }
           size={el.style.width}
           bgColor="white"
         />

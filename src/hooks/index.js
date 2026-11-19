@@ -4,4 +4,5 @@ import useDirect from "./useDirect";
 import useDebounce from "./useDebounce";
 import useAutoPrint from "./useAutoPrint";
 import useQrScanner from "./useQrScanner";
-export { useTheme, useApi, useDirect, useDebounce, useAutoPrint, useQrScanner };
+import useScanInput from "./useScanInput";
+export { useTheme, useApi, useDirect, useDebounce, useAutoPrint, useQrScanner, useScanInput };

@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { insertManyFromCloud } = require("../database/sync");
+const { insertManyFromCloud, setUniqueUserIds } = require("../database/sync");
 const { getLastSync, updateLastSync } = require("../database/syncState");
 const settings = require("../settings");
 const { db } = require("../db");
@@ -33,9 +33,30 @@ async function syncFromCloud() {
       );
       if (newestTime) updateLastSync(newestTime, eventId);
     }
+
+    // A full pull (no updatedAfter) already brought uniqueUserId for every row
+    if (!lastSync) settings.set(BACKFILL_KEY, eventId);
+    else await backfillUniqueUserIds(eventId);
   } catch (err) {
     // console.error("syncFromCloud error:", err.message);
   }
+}
+
+// Rows pulled before the uniqueUserId column existed never get it from the
+// incremental pull (updatedAfter), so fetch the full list once per event and
+// set only that column. Not a full re-pull: INSERT OR REPLACE would replace the
+// rows, changing local ids and losing un-pushed check-ins.
+const BACKFILL_KEY = "uniqueUserIdBackfilledFor";
+
+async function backfillUniqueUserIds(eventId) {
+  if (settings.get(BACKFILL_KEY) === eventId) return;
+  const res = await axios.get(`${API}?${new URLSearchParams({ eventId })}`, {
+    headers: CLOUD_HEADERS,
+  });
+  const users = res.data?.data;
+  if (!Array.isArray(users)) return;
+  setUniqueUserIds(eventId, users);
+  settings.set(BACKFILL_KEY, eventId);
 }
 
 module.exports = { syncFromCloud };

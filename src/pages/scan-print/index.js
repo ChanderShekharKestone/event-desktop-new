@@ -4,12 +4,11 @@ import {
   Button,
   CircularProgress,
   Dialog,
+  DialogActions,
   DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
-  FormControl,
-  InputAdornment,
-  InputLabel,
-  OutlinedInput,
   Paper,
   Snackbar,
   Typography,
@@ -19,24 +18,38 @@ import BarcodeReader from "react-barcode-reader";
 
 import {
   apiUserScan,
-  apiUserSearch,
   apiAttendeeTypes,
   apiBadgeTemplates,
   method,
 } from "../../apiPath";
 import keyNames from "../../keyName";
-import { useApi, useDirect, useAutoPrint, useQrScanner } from "../../hooks";
-import { getToast } from "../../common/utils";
+import {
+  useApi,
+  useDirect,
+  useAutoPrint,
+  useQrScanner,
+  useScanInput,
+} from "../../hooks";
 import BadgePreview from "../../common/BadgePreview";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import SearchDelegates from "./SearchDelegates";
 
-const toast = getToast("error");
+// Must match server/database/registrations.js — a QR scan of a badge already checked
+// in gets this 409. Shown as the "Print again?" dialog instead of an error toast.
+// (The search list asks its own "Print again?" before calling, so never hits it.)
+const ALREADY_SCANNED_MESSAGE =
+  "This QR code has already been scanned, please visit the help desk";
 
 const Scan = () => {
   const hitApi = useApi();
   const directDispatch = useDirect();
-  const { userScanData, attendeeTypesData, badgeTemplatesData, isLoading } =
-    useSelector((s) => s.mainReducer);
+  const {
+    userScanData,
+    attendeeTypesData,
+    badgeTemplatesData,
+    isLoading,
+    apiErrors,
+  } = useSelector((s) => s.mainReducer);
 
   // Merge badge templates into scan data — same pattern as live-admin
   const enrichedScanData = userScanData
@@ -45,43 +58,78 @@ const Scan = () => {
 
   const [noBadgeAlert, setNoBadgeAlert] = useState(false);
 
-  const handleCheckin = (id) => {
+  // A check-in request is still in flight (isLoading stays 'userScanData' ~500ms after the
+  // response too). Block new scans until it clears, so a slow answer for an earlier (e.g.
+  // wrong) QR can't land on top of a later scan's result.
+  const checkinPending = isLoading === keyNames.userScanData;
+
+  // allowReprint: set by the search list's Print button and by confirming "Print again?".
+  // A fresh QR scan never sets it, so an already-checked-in badge asks first.
+  // Errors are shown from apiErrors below (not hitApi's toast), so the "already scanned"
+  // one becomes the dialog instead of an error toast.
+  const lastAttemptRef = useRef(null); // value of the last check-in call, or null
+  const handleCheckin = (id, allowReprint = false) => {
+    if (id === undefined || id === null || id === "") return;
+    // A re-print is a deliberate click after the earlier call already answered (the
+    // search Print button is disabled while one runs), so only scans wait for pending
+    if (checkinPending && !allowReprint) return;
+    lastAttemptRef.current = id;
     hitApi(
       apiUserScan,
       {
+        // Raw QR text: the server reads uniqueUserId, cloud _id and older '{"id":…}' badges
         id,
         isCheckedIn: true,
         checkedInTime: new Date().toISOString(),
         isPrintClicked: true,
+        allowReprint,
       },
       method.post,
       keyNames.userScanData,
-      toast,
+      null,
       { type: "get" },
     );
   };
 
+  const [reprintPrompt, setReprintPrompt] = useState(null); // raw scan value, or null
+  useEffect(() => {
+    const msg = apiErrors?.message;
+    if (!msg || lastAttemptRef.current === null) return;
+    if (msg === ALREADY_SCANNED_MESSAGE) {
+      setReprintPrompt(lastAttemptRef.current);
+    } else {
+      directDispatch(
+        { type: "error", title: "Error", description: msg, position: "top-center" },
+        keyNames.toastData,
+      );
+    }
+    directDispatch(null, keyNames.apiErrors);
+  }, [apiErrors, directDispatch]);
+
+  const confirmReprint = () => {
+    if (reprintPrompt !== null) handleCheckin(reprintPrompt, true);
+    setReprintPrompt(null);
+  };
+
+  // eslint-disable-next-line no-unused-vars -- startScanning/resetScanner kept for the commented-out button below
   const { startScanning, isScanning, resetScanner } = useQrScanner({
-    onScan: (text) => {
-      const { id } = JSON.parse(text);
-      handleCheckin(id);
-    },
+    onScan: (text) => handleCheckin(text),
   });
 
   const [showSearch, setShowSearch] = useState(false);
-  const [email, setEmail] = useState(null);
-  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const { badge, cardRef, isPrinting, printingUser } = useAutoPrint({
     userScanData: enrichedScanData,
     directDispatch,
     keyName: keyNames.userScanData,
     types: attendeeTypesData,
-    onAfterPrint: () => {
-      setShowSearch(false);
-      setEmail(null);
-    },
+    onAfterPrint: () => setShowSearch(false),
   });
+
+  // Same condition as the BarcodeReader below — no scanning while a badge prints, a
+  // previous check-in is in flight, or the "Print again?" dialog is open
+  const scanEnabled = !isPrinting && !checkinPending && reprintPrompt === null;
+  useScanInput((text) => handleCheckin(text), scanEnabled);
 
   // Show alert when user checked in but no badge templates pulled yet
   useEffect(() => {
@@ -89,7 +137,6 @@ const Scan = () => {
       setNoBadgeAlert(true);
       directDispatch(null, keyNames.userScanData);
       setShowSearch(false);
-      setEmail(null);
     }
   }, [userScanData, badgeTemplatesData, directDispatch]);
 
@@ -118,28 +165,7 @@ const Scan = () => {
     ? types.find((t) => t.name?.toLowerCase() === printingKey)
     : null;
 
-  const handleSearch = () => {
-    if (isValidEmail) {
-      hitApi(
-        apiUserSearch,
-        {
-          email,
-          isCheckedIn: true,
-          checkedInTime: new Date().toISOString(),
-          isPrintClicked: true,
-        },
-        method.post,
-        keyNames.userScanData,
-        toast,
-        { type: "get", changeLoading: false },
-      );
-    }
-  };
-
-  const handleSearchReset = () => {
-    setShowSearch(!showSearch);
-    setEmail(null);
-  };
+  const handleSearchReset = () => setShowSearch(!showSearch);
 
   return (
     <Box
@@ -151,9 +177,9 @@ const Scan = () => {
         p: 2,
       }}
     >
-      {!isPrinting && (
+      {scanEnabled && (
         <BarcodeReader
-          onScan={(data) => handleCheckin(JSON.parse(data).id)}
+          onScan={(data) => handleCheckin(data)}
           onError={(err) => console.error(err)}
         />
       )}
@@ -181,7 +207,9 @@ const Scan = () => {
 
       <Paper
         sx={{
-          maxWidth: 420,
+          // Wider in search mode to fit the result list
+          maxWidth: showSearch ? 520 : 420,
+          width: "100%",
           minWidth: 320,
           p: 5,
           borderRadius: 3,
@@ -201,7 +229,6 @@ const Scan = () => {
               Printing in progress… <br />
               please wait
             </Typography>
-            {console.log(printingType, "printingType")}
           </DialogContent>
           {printingType && (
             <Box
@@ -258,6 +285,22 @@ const Scan = () => {
           )}
         </Dialog>
 
+        <Dialog open={reprintPrompt !== null} onClose={() => setReprintPrompt(null)}>
+          <DialogTitle>Print again?</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              This badge has already been printed. Would you like to print it
+              again?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setReprintPrompt(null)}>Cancel</Button>
+            <Button variant="contained" onClick={confirmReprint} autoFocus>
+              Print again
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         <Typography
           textAlign="center"
           variant="h5"
@@ -272,7 +315,9 @@ const Scan = () => {
           color="text.secondary"
           mb={3}
         >
-          Position the QR code within the frame to check in automatically
+          {!showSearch
+            ? "Position the QR code within the frame to check in automatically"
+            : "Search by name, email, organization, designation or type"}
         </Typography>
 
         {!showSearch ? (
@@ -292,40 +337,20 @@ const Scan = () => {
                 position: "relative",
               }}
             />
+            {/* Scan QR Code (camera) button commented, same as vosmos-events-client
             <Button
               variant="contained"
               size="large"
               fullWidth
+              disabled={checkinPending}
               onClick={isScanning ? resetScanner : startScanning}
             >
               {isScanning ? "Stop Scanning" : "Scan QR Code"}
             </Button>
+            */}
           </>
         ) : (
-          <Box sx={{ width: "100%", mt: 3 }}>
-            <FormControl fullWidth>
-              <InputLabel htmlFor="email-search">Email</InputLabel>
-              <OutlinedInput
-                id="email-search"
-                label="Email"
-                value={email ?? ""}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                type="email"
-                endAdornment={
-                  <InputAdornment position="end">
-                    <Button
-                      variant="contained"
-                      disabled={!isValidEmail || isLoading === "userScanData"}
-                      onClick={handleSearch}
-                    >
-                      Search
-                    </Button>
-                  </InputAdornment>
-                }
-              />
-            </FormControl>
-          </Box>
+          <SearchDelegates onPrint={handleCheckin} />
         )}
 
         <Divider sx={{ my: 2 }}>OR</Divider>
@@ -334,7 +359,7 @@ const Scan = () => {
             variant="outlined"
             color="primary"
             onClick={handleSearchReset}
-            disabled={isScanning || isLoading === "userScanData"}
+            disabled={isScanning || checkinPending}
           >
             {showSearch ? "Scan QR Code" : "Can't scan? Search manually"}
           </Button>

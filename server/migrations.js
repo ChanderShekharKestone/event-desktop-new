@@ -489,6 +489,18 @@ function runMigrations() {
       db.prepare(`ALTER TABLE form_headings ADD COLUMN css_urls TEXT NOT NULL DEFAULT '[]'`).run();
     }
   }
+
+  // Badge QR value on cloud-printed badges (e.g. "GAI-00001"). Per event and not
+  // unique: the cloud has duplicates. Stored uppercase; NULL for desktop walk-ins.
+  {
+    const cols = db.prepare("PRAGMA table_info(registrations)").all().map((c) => c.name);
+    if (!cols.includes("uniqueUserId")) {
+      db.prepare(`ALTER TABLE registrations ADD COLUMN uniqueUserId TEXT`).run();
+    }
+    db.prepare(
+      `CREATE INDEX IF NOT EXISTS idx_registrations_unique_user_id ON registrations (eventId, uniqueUserId)`,
+    ).run();
+  }
 }
 
 module.exports = runMigrations;

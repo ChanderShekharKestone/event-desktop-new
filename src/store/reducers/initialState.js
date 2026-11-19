@@ -13,6 +13,7 @@ export const initialState = {
   [keyNames.syncPullData]: null,
   [keyNames.syncPushData]: null,
   [keyNames.userScanData]: null,
+  [keyNames.scanSearchResults]: null,
   [keyNames.attendeeTypesData]: null,
   [keyNames.badgeTemplatesData]: null,
   [keyNames.syncPendingCount]: null,

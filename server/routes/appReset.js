@@ -89,7 +89,7 @@ const showDialog = (electron, options) => {
 const stamp = () => new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
 
 const CSV_COLUMNS = [
-  "eventId", "cloudId", "firstName", "lastName", "email", "mobile",
+  "eventId", "cloudId", "uniqueUserId", "firstName", "lastName", "email", "mobile",
   "organization", "designation", "type", "campaignSource", "paymentStatus",
   "amount", "isCheckedIn", "checkedInTime", "isPrintClicked", "termsAndCondn",
   "areaOfInterest", "customfields", "timestamp",

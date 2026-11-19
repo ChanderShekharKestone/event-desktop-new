@@ -23,7 +23,11 @@ export const getByPath =
         }
       })
       .catch((error) => {
-        payload = error.response?.data;
+        // No response = server unreachable; still give apiErrors a message so pages
+        // that read it (scan page) can show it
+        payload = error.response
+          ? error.response.data
+          : { message: "Cannot reach server. Check the network connection." };
         if (payload?.data?.logOut) {
           payload = payload.data.logOut;
           dispatch({ type: name, payload, keyName: forceLogOut });
