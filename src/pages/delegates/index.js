@@ -617,6 +617,7 @@ const Delegates = () => {
             fetchDelegates();
           }}
           badgeData={badgeTemplatesData}
+          types={attendeeTypes}
         />
       )}
 

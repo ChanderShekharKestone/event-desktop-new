@@ -1,6 +1,13 @@
-import { Box, Avatar } from "@mui/material";
+import { Avatar, Box } from "@mui/material";
 import QRCode from "react-qr-code";
-import { calculateFontSize } from "./utils";
+import { calculateFontSize, toPx } from "./utils";
+
+// Ported from vosmos-events-client (component/badge/CardElement.js), which mirrors the
+// main admin's CardElement so the printed badge matches the admin's badge preview.
+
+// antd QRCode: white box of `size` with 12px padding + 1px border, QR drawn inside
+const QR_PADDING = 12;
+const QR_BORDER = 1;
 
 const CardElement = ({ el, userInfo, canvasWidth = 300 }) => {
   let value = "";
@@ -11,26 +18,42 @@ const CardElement = ({ el, userInfo, canvasWidth = 300 }) => {
   else if (el.type === "lastName") value = userInfo?.lastName;
   else if (el.type === "company") value = userInfo?.organization || "";
   else if (el.type === "designation") value = userInfo?.designation || "";
+  else if (el.type === "industry")
+    value = userInfo?.customfields?.industry || "";
   else if (el.type === "qrCode") value = userInfo?.qrCode || "";
+  else if (el.type === "intent" && el.intentType === "text")
+    value = el.intentOptions?.[userInfo?.customfields?.intent] || "";
   else value = el.label;
 
-  /* ---------- NAME (full width, centered) ---------- */
+  /* ---------- NAME → single line shrinks font to fit, else wraps ---------- */
   if (el.type === "name" || el.type === "firstName" || el.type === "lastName") {
+    const singleLine = el.singleLine ?? false;
+    const maxTextWidth =
+      toPx(el.style.width ?? canvasWidth, canvasWidth) -
+      (Number(el.style.paddingLeft) || 0) -
+      (Number(el.style.paddingRight) || 0);
     return (
-      <div style={el.style}>
+      <div style={{ boxSizing: "border-box", ...el.style }}>
         <div
           style={{
-            fontSize: calculateFontSize(
-              value,
-              canvasWidth - 20,
-              el.style.fontSize,
-            ),
+            fontSize: singleLine
+              ? calculateFontSize(value, maxTextWidth, el.style.fontSize)
+              : el.style.fontSize,
             color: el.style.color,
             userSelect: "none",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            display: "inline-block",
+            ...(singleLine
+              ? {
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  display: "inline-block",
+                }
+              : {
+                  whiteSpace: "normal",
+                  wordBreak: "break-word",
+                  overflowWrap: "anywhere",
+                  display: "block",
+                }),
             maxWidth: "100%",
             lineHeight: 1.2,
           }}
@@ -42,39 +65,62 @@ const CardElement = ({ el, userInfo, canvasWidth = 300 }) => {
   }
 
   /* ---------- OTHER ELEMENTS ---------- */
+  const intentImg = el.intentImageOptions?.[userInfo?.customfields?.intent];
+  const size = toPx(el.style.width, canvasWidth);
+
   return (
-    <div style={el.style}>
-      {el.type === "img" || el.type === "avatar" ? (
+    <div style={{ boxSizing: "border-box", ...el.style }}>
+      {el.type === "img" ||
+      el.type === "avatar" ||
+      (el.type === "intent" && el.intentType === "image") ? (
         el.type === "avatar" ? (
           <Avatar
-            variant={el.style.shape === "circle" ? "circular" : "square"}
+            variant={el.style.shape === "circle" ? "circular" : "rounded"}
             src={userInfo?.avatarUrl}
-            sx={{
-              width: el.style.width,
-              height: el.style.height || el.style.width,
-            }}
+            sx={{ width: size, height: size }}
           />
         ) : (
-          <img
-            src={el.style.url}
-            alt={el.type}
-            style={{
-              width: el.style.width,
-              height: el.style.height || "auto",
-            }}
-          />
+          <>
+            {intentImg && (
+              <img
+                src={intentImg}
+                alt={el.type}
+                style={{ width: "100%", height: el.style.height || "auto" }}
+              />
+            )}
+            {el.style.url && (
+              <img
+                src={el.style.url}
+                alt={el.type}
+                style={{ width: "100%", height: el.style.height || "auto" }}
+              />
+            )}
+          </>
         )
       ) : el.type === "qrCode" ? (
-        <QRCode
-          // Same as cloud badges: uniqueUserId when the delegate has one; otherwise
-          // the older JSON form (walk-ins have no uniqueUserId, maybe no cloudId yet)
-          value={
-            userInfo?.uniqueUserId ||
-            JSON.stringify({ id: userInfo?.cloudId || userInfo?._id })
-          }
-          size={el.style.width}
-          bgColor="white"
-        />
+        <Box
+          sx={{
+            boxSizing: "border-box",
+            width: size,
+            height: size,
+            p: `${QR_PADDING}px`,
+            border: `${QR_BORDER}px solid rgba(5, 5, 5, 0.06)`,
+            borderRadius: "8px",
+            bgcolor: "white",
+            display: "flex",
+          }}
+        >
+          <QRCode
+            // Same as cloud badges: uniqueUserId when the delegate has one; otherwise
+            // the older JSON form (walk-ins have no uniqueUserId, maybe no cloudId yet)
+            value={
+              userInfo?.uniqueUserId ||
+              JSON.stringify({ id: userInfo?.cloudId || userInfo?._id })
+            }
+            size={Math.max(0, size - (QR_PADDING + QR_BORDER) * 2)}
+            bgColor="white"
+          />
+        </Box>
       ) : el.type !== "row" ? (
         <div
           style={{

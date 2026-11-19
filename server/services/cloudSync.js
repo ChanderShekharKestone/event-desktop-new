@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { insertManyFromCloud, setUniqueUserIds } = require("../database/sync");
+const { insertManyFromCloud, setPulledExtras } = require("../database/sync");
 const { getLastSync, updateLastSync } = require("../database/syncState");
 const settings = require("../settings");
 const { db } = require("../db");
@@ -34,28 +34,29 @@ async function syncFromCloud() {
       if (newestTime) updateLastSync(newestTime, eventId);
     }
 
-    // A full pull (no updatedAfter) already brought uniqueUserId for every row
+    // A full pull (no updatedAfter) already stored those columns for every row
     if (!lastSync) settings.set(BACKFILL_KEY, eventId);
-    else await backfillUniqueUserIds(eventId);
+    else await backfillPulledExtras(eventId);
   } catch (err) {
     // console.error("syncFromCloud error:", err.message);
   }
 }
 
-// Rows pulled before the uniqueUserId column existed never get it from the
-// incremental pull (updatedAfter), so fetch the full list once per event and
-// set only that column. Not a full re-pull: INSERT OR REPLACE would replace the
-// rows, changing local ids and losing un-pushed check-ins.
-const BACKFILL_KEY = "uniqueUserIdBackfilledFor";
+// Rows pulled before uniqueUserId / avatarUrl / customfields / campaignSource /
+// customerId / appType were stored never get them from the incremental pull
+// (updatedAfter), so fetch the full list once per event and set only those columns.
+// Not a full re-pull: INSERT OR REPLACE would replace the rows, changing local ids
+// and losing un-pushed check-ins. Bump the key when more pulled columns are added.
+const BACKFILL_KEY = "pulledExtrasBackfilledFor_v2";
 
-async function backfillUniqueUserIds(eventId) {
+async function backfillPulledExtras(eventId) {
   if (settings.get(BACKFILL_KEY) === eventId) return;
   const res = await axios.get(`${API}?${new URLSearchParams({ eventId })}`, {
     headers: CLOUD_HEADERS,
   });
   const users = res.data?.data;
   if (!Array.isArray(users)) return;
-  setUniqueUserIds(eventId, users);
+  setPulledExtras(eventId, users);
   settings.set(BACKFILL_KEY, eventId);
 }
 

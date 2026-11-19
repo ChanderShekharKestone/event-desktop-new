@@ -1,15 +1,36 @@
 import { useEffect, useMemo } from "react";
+import { getBadgePageStyle } from "../common/badgePrint";
 
+// Strips everything but letters/digits before lowercasing, so "Partner Delegate",
+// "partner-delegate" and "partnerdelegate" are all treated as the same type.
+const normalizeType = (value) =>
+  value?.toLowerCase().replace(/[^a-z0-9]/g, "") ?? null;
+
+/**
+ * Badge template for a delegate. Same matching as vosmos-events-client:
+ * delegate type (e.g. "speaker") vs badge.type (e.g. "Speaker"), exact first, then a
+ * prefix match for templates with a mode suffix ("Partner Delegate - Onsite").
+ * Desktop fallback: the attendee type's displayName (types pulled from the cloud),
+ * as before. Then the first badge.
+ */
 export const getBadgeByType = (user, badgeData, types) => {
   if (!badgeData?.length) return null;
-  let resolvedType = null;
-  if (types?.length) {
-    const userKey = (user?.type || user?.roleId)?.toLowerCase();
-    const matched = types.find((t) => t.name?.toLowerCase() === userKey);
-    resolvedType = matched?.displayName?.toLowerCase() ?? null;
-  }
+  const userKey = user?.type || user?.roleId;
+  const resolvedType = normalizeType(userKey);
+  if (!resolvedType) return badgeData[0];
+
+  const byType =
+    badgeData.find((b) => normalizeType(b.type) === resolvedType) ||
+    badgeData.find((b) => normalizeType(b.type)?.startsWith(resolvedType));
+  if (byType) return byType;
+
+  const displayName = normalizeType(
+    types?.find((t) => t.name?.toLowerCase() === userKey?.toLowerCase())
+      ?.displayName,
+  );
   return (
-    badgeData.find((b) => b.type?.toLowerCase() === resolvedType) ||
+    (displayName &&
+      badgeData.find((b) => normalizeType(b.type) === displayName)) ||
     badgeData[0]
   );
 };
@@ -35,31 +56,8 @@ const useBadgePrint = (badge) => {
     };
   }, [badge?.fontFamily]);
 
-  // Print page style
-  const pageStyle = useMemo(() => {
-    const marginMap = {
-      left:   "margin-left: 0; margin-right: auto;",
-      center: "margin-left: auto; margin-right: auto;",
-      right:  "margin-left: auto; margin-right: 0;",
-    };
-    const marginStyle = marginMap[badge?.alignment] ?? marginMap.center;
-    return `
-      @page { size: auto; margin: 0; }
-      @media print {
-        body {
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-        }
-        .print-card {
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-          font-family: "${badge?.fontFamily || "Arial"}", sans-serif !important;
-          display: block;
-          ${marginStyle}
-        }
-      }
-    `;
-  }, [badge?.fontFamily, badge?.alignment]);
+  // Print page style — paper size, alignment and margins come from badge.printSettings (set in admin)
+  const pageStyle = useMemo(() => getBadgePageStyle(badge), [badge]);
 
   return { pageStyle };
 };

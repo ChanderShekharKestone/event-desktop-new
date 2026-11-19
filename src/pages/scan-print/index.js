@@ -164,6 +164,20 @@ const Scan = () => {
   const printingType = printingKey
     ? types.find((t) => t.name?.toLowerCase() === printingKey)
     : null;
+  // "Printing…" popup: lanyard set on the badge template (as on the cloud), else the
+  // attendee type's colour
+  const lanyard = {
+    img: badge?.lanyardImg || null,
+    color: badge?.lanyardColor || printingType?.color || null,
+    name:
+      badge?.lanyardColorName ||
+      (badge?.lanyardColor ? null : printingType?.colorName) ||
+      badge?.lanyardColor ||
+      printingType?.color ||
+      null,
+  };
+  const typeLabel =
+    printingType?.displayName || printingUser?.type || badge?.type || null;
 
   const handleSearchReset = () => setShowSearch(!showSearch);
 
@@ -184,11 +198,8 @@ const Scan = () => {
         />
       )}
 
-      <BadgePreview
-        badge={badge}
-        userInfo={enrichedScanData?.userInfo}
-        cardRef={cardRef}
-      />
+      {/* Snapshot of the delegate being printed — userScanData is cleared after printing */}
+      <BadgePreview badge={badge} userInfo={printingUser} cardRef={cardRef} />
 
       <Snackbar
         open={noBadgeAlert}
@@ -230,7 +241,22 @@ const Scan = () => {
               please wait
             </Typography>
           </DialogContent>
-          {printingType && (
+          {lanyard.img && (
+            <Box sx={{ px: 4, pb: 3, textAlign: "center" }}>
+              <Box
+                component="img"
+                src={lanyard.img}
+                alt={lanyard.name || "Lanyard"}
+                sx={{
+                  maxWidth: "100%",
+                  maxHeight: 160,
+                  objectFit: "contain",
+                  borderRadius: 2,
+                }}
+              />
+            </Box>
+          )}
+          {(typeLabel || lanyard.color || lanyard.name) && (
             <Box
               display="flex"
               sx={{
@@ -247,7 +273,7 @@ const Scan = () => {
                   fontWeight={700}
                   sx={{ color: "#201751" }}
                 >
-                  {printingType.displayName}
+                  {typeLabel || "—"}
                 </Typography>
               </Box>
               <Divider orientation="vertical" flexItem />
@@ -261,13 +287,13 @@ const Scan = () => {
                   justifyContent="center"
                   gap={1}
                 >
-                  {printingType.color && (
+                  {lanyard.color && (
                     <Box
                       sx={{
                         width: 32,
                         height: 32,
                         flexShrink: 0,
-                        bgcolor: printingType.color,
+                        bgcolor: lanyard.color,
                         border: "1px solid rgba(0,0,0,0.2)",
                       }}
                     />
@@ -277,7 +303,7 @@ const Scan = () => {
                     fontWeight={700}
                     sx={{ color: "#201751" }}
                   >
-                    {printingType.colorName || printingType.color || "—"}
+                    {lanyard.name || "—"}
                   </Typography>
                 </Box>
               </Box>

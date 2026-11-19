@@ -490,6 +490,20 @@ function runMigrations() {
     }
   }
 
+  // Badge template fields set in the cloud admin: print layout (paper size, position,
+  // margins) and the lanyard shown in the "Printing…" popup
+  {
+    const cols = db.prepare("PRAGMA table_info(badge_templates)").all().map((c) => c.name);
+    for (const [col, def] of [
+      ["print_settings", "TEXT"],
+      ["lanyard_img", "TEXT"],
+      ["lanyard_color", "TEXT"],
+      ["lanyard_color_name", "TEXT"],
+    ]) {
+      if (!cols.includes(col)) db.prepare(`ALTER TABLE badge_templates ADD COLUMN ${col} ${def}`).run();
+    }
+  }
+
   // Badge QR value on cloud-printed badges (e.g. "GAI-00001"). Per event and not
   // unique: the cloud has duplicates. Stored uppercase; NULL for desktop walk-ins.
   {

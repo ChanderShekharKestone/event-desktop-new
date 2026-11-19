@@ -1,15 +1,8 @@
 import { Box } from "@mui/material";
 import CardElement from "./CardElement";
 
-const alignmentStyles = {
-  left:   { marginLeft: 0, marginRight: "auto" },
-  center: { marginLeft: "auto", marginRight: "auto" },
-  right:  { marginLeft: "auto", marginRight: 0 },
-};
-
 const BadgeCard = ({ badge, userInfo, cardRef }) => {
   if (!badge) return null;
-  const align = alignmentStyles[badge.alignment] ?? alignmentStyles.center;
 
   return (
     <Box
@@ -17,8 +10,7 @@ const BadgeCard = ({ badge, userInfo, cardRef }) => {
         position: "relative",
         width: Number(badge.width),
         height: Number(badge.height),
-        ...align,
-        // remove any inherited positional offsets
+        // print position comes from badge.printSettings (see useBadgePrint)
         left: "unset",
         transform: "none",
       }}

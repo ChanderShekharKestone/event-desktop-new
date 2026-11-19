@@ -14,22 +14,18 @@ import PrintIcon from "@mui/icons-material/Print";
 import { useReactToPrint } from "react-to-print";
 import axios from "axios";
 import { apiPath, apiGetRegistrations } from "../../apiPath";
-import useBadgePrint from "../../hooks/useBadgePrint";
+import useBadgePrint, { getBadgeByType } from "../../hooks/useBadgePrint";
 import BadgeCard from "../../common/BadgeCard";
 
-const PrintableBadgeModal = ({ userInfo, onClose, badgeData }) => {
+const PrintableBadgeModal = ({ userInfo, onClose, badgeData, types }) => {
   const [badge, setBadge] = useState(null);
   const cardRef = useRef();
   const { pageStyle } = useBadgePrint(badge);
 
   useEffect(() => {
-    if (badgeData?.length > 0) {
-      const matched = badgeData.find(
-        (item) => item.type?.toLowerCase() === userInfo?.type?.toLowerCase(),
-      );
-      setBadge(matched || badgeData[0]);
-    }
-  }, [badgeData, userInfo?.type]);
+    // Same matching as the scan page (type, prefix, attendee-type name, then first)
+    if (badgeData?.length > 0) setBadge(getBadgeByType(userInfo, badgeData, types));
+  }, [badgeData, userInfo, types]);
 
   const handlePrint = useReactToPrint({
     contentRef: cardRef,

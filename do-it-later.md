@@ -40,6 +40,13 @@ Order to fix in: 1, then 2 + 5 together, then 3, then 4.
    Fix: `INSERT … ON CONFLICT(cloudId) DO UPDATE`, keeping the local id, and skip (or merge)
    rows that still have a `push_pending` entry.
 
+4c. **Check-in push sends the whole row** (`server/services/pushSync.js`, PUT `$set` of
+   every field). Fixed 2026-11-19 for the fields the pull never stored (avatarUrl,
+   customfields, campaignSource, customerId, appType were blanked on the cloud), but
+   any field edited on the cloud after the desktop's last pull is still overwritten
+   with the desktop's older copy. Fix: PUT only what the desktop changed (check-in /
+   print fields) for rows that have a cloudId.
+
 ## Medium
 
 5. **Two ways into giveaway sync can run at the same time.** `/api/sync/push` and

@@ -59,3 +59,11 @@ export const calculateFontSize = (text, maxWidth, maxFontSize) => {
   }
   return fontSize;
 };
+
+// Badge element sizes: a number of px, or "50%" of `total` (the badge width)
+export const toPx = (value, total) => {
+  if (typeof value === "string" && value.trim().endsWith("%")) {
+    return Math.round(((parseFloat(value) || 0) / 100) * total);
+  }
+  return Number(value) || 0;
+};

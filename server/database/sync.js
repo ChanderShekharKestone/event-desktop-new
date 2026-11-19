@@ -3,6 +3,18 @@ const { db } = require("../db");
 // Badge QR value; the cloud has many "" — store those as NULL
 const toUniqueUserId = (v) => (typeof v === "string" && v.trim() ? v.trim().toUpperCase() : null);
 
+const DEFAULT_AVATAR = "https://cdn.vosmos.live/VEP/assests/dummy.png";
+
+// Fields the desktop never edits but pushes back with every check-in (pushSync sends
+// the whole row): they must hold the cloud's values or the PUT blanks them on the cloud
+const extraFields = (u) => [
+  u.avatarUrl || DEFAULT_AVATAR,
+  u.customfields && typeof u.customfields === "object" ? JSON.stringify(u.customfields) : null,
+  u.campaignSource ?? null,
+  u.customerId ? String(u.customerId) : null,
+  u.appType ?? null,
+];
+
 // Wrap entire batch in one transaction — avoids per-row lock contention
 // Prepared lazily (not at require time) so the table exists when first called
 function insertManyFromCloud(users) {
@@ -11,8 +23,9 @@ function insertManyFromCloud(users) {
        cloudId, firstName, lastName, email, mobile, organization, designation,
        isCheckedIn, checkedInTime, isPrintClicked, isActive, isLoginAllowed,
        roleId, eventId, amount, paymentStatus, type, primeMember, moderator,
-       attend, termsAndCondn, areaOfInterest, timestamp, uniqueUserId
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       attend, termsAndCondn, areaOfInterest, timestamp, uniqueUserId,
+       avatarUrl, customfields, campaignSource, customerId, appType
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   const runAll = db.transaction((rows) => {
     for (const user of rows) {
@@ -41,18 +54,28 @@ function insertManyFromCloud(users) {
         JSON.stringify(user.areaOfInterest ?? []),
         user.updatedAt,
         toUniqueUserId(user.uniqueUserId),
+        ...extraFields(user),
       );
     }
   });
   runAll(users);
 }
 
-/** Fill in uniqueUserId for rows already pulled, touching no other column */
-function setUniqueUserIds(eventId, users) {
-  const update = db.prepare(`UPDATE registrations SET uniqueUserId = ? WHERE cloudId = ? AND eventId = ?`);
+/**
+ * Fill in uniqueUserId + the extra fields for rows pulled before those columns were
+ * stored, touching no other column (no INSERT OR REPLACE: that changes local ids)
+ */
+function setPulledExtras(eventId, users) {
+  const update = db.prepare(
+    `UPDATE registrations
+     SET uniqueUserId = ?, avatarUrl = ?, customfields = ?, campaignSource = ?, customerId = ?, appType = ?
+     WHERE cloudId = ? AND eventId = ?`,
+  );
   db.transaction(() => {
-    for (const u of users) update.run(toUniqueUserId(u.uniqueUserId), String(u._id), eventId);
+    for (const u of users) {
+      update.run(toUniqueUserId(u.uniqueUserId), ...extraFields(u), String(u._id), eventId);
+    }
   })();
 }
 
-module.exports = { insertManyFromCloud, setUniqueUserIds, toUniqueUserId };
+module.exports = { insertManyFromCloud, setPulledExtras, toUniqueUserId };
