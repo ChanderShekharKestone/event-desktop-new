@@ -1,9 +1,9 @@
 /**
- * Lead capture cloud sync (cloud: VosmosVirtualEvents routes/Offline.js,
- * controllers/offlineLeadCapture.js — merge rules are documented there).
+ * Lead capture cloud sync with the diy-ui api (routes/offlineLeadCapture.routes.js,
+ * controllers/offlineLeadCapture.controller.js — merge rules are documented there).
  *
- *   GET  {CLOUD_BASE}/lead-capture/:eventId  → points, sessions, visits, leads, event name / zone
- *   POST {CLOUD_BASE}/lead-capture/push      → { done, rejected, leadIds }
+ *   GET  {LEAD_CLOUD_BASE}/:eventId  → points, sessions, visits, leads, event name / zone
+ *   POST {LEAD_CLOUD_BASE}/push      → { done, rejected, leadIds }
  *
  * Push: rows with sync_state 'dirty' and tombstones, in batches. A row is marked 'synced' only
  * if it wasn't edited while the request was out (same updated_at). Visits / leads of a delegate
@@ -20,8 +20,8 @@ const BATCH = 500;
 const TIMEOUT_MS = 30000;
 const TABLE = { point: "lead_points", session: "lead_sessions", visit: "lead_visits", lead: "lead_booth_leads" };
 
-const api = () => `${config.CLOUD_BASE}/lead-capture`;
-const request = { headers: config.CLOUD_HEADERS, timeout: TIMEOUT_MS };
+const api = () => config.LEAD_CLOUD_BASE;
+const request = { headers: config.LEAD_CLOUD_HEADERS, timeout: TIMEOUT_MS };
 const iso = (v) => (v ? new Date(v).toISOString() : null);
 const parseJson = (s, fallback) => {
   try {

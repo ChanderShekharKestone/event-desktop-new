@@ -95,12 +95,17 @@ Order to fix in: 1, then 2 + 5 together, then 3, then 4.
 
 ## Lead capture (branch `lead-capture`)
 
-- **Phase B (sync) needs the cloud deploy.** Desktop side committed; the VosmosVirtualEvents
-  changes (`models/leadCapture.js`, `controllers/offlineLeadCapture.js`, 2 routes in
-  `routes/Offline.js`) are written and tested against a local MongoDB but NOT committed or
-  deployed. Until deployed, lead capture stays on the PC ("Cloud lead capture API not available").
-- Lead capture endpoints are open like the other Offline.js ones (anyone with the eventId can
-  read/push lead data). Same exposure as giveaways — worth an auth token for all of Offline.js.
+- **Phase B (sync) needs the diy-ui deploy.** Desktop side committed (syncs with
+  `LEAD_CLOUD_BASE` = https://frontapi.vosmos.events/dashboard/api/v1/offline/lead-capture).
+  diy-ui: `routes/offlineLeadCapture.routes.js`, `controllers/offlineLeadCapture.controller.js`,
+  mounted in `api/server.js` before the 10 KB JSON parser (own 5 MB limit + rate limit), on
+  branch `offline-lead-capture`. Tested against a local MongoDB through diy-ui's real app; not
+  deployed. Until deployed, lead capture stays on the PC.
+- The diy-ui offline endpoints are open (no login, by decision): anyone with the eventId can
+  read or push lead data. Consider an activation check later (shared `activations` collection:
+  key + machineId + eventId).
+- diy-ui runs on Lambda (serverless-http): a push of 500 scans does several queries per scan
+  — watch the 29 s API Gateway timeout on big events; lower the desktop BATCH if needed.
 - Rejected lead records (e.g. "Attendee not found in this event") stay listed with no
   dismiss button (the giveaway page has one).
 - Attendees are keyed by email: if a delegate's email changes in a cloud pull, their
