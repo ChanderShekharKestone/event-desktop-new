@@ -862,13 +862,14 @@ function rateLead(point, body) {
   const keys = Object.keys(set);
   if (!keys.length) return err(400, "Nothing to save");
 
-  // Only leads scanned at this booth can be rated
+  // Only leads scanned at this booth can be rated. rated_at: see migrations (sync rule)
+  const nowIso = iso(Date.now());
   const { changes } = db
     .prepare(
-      `UPDATE lead_booth_leads SET ${keys.map((k) => `${k} = ?`).join(", ")}, updated_at = ?, sync_state = 'dirty'
+      `UPDATE lead_booth_leads SET ${keys.map((k) => `${k} = ?`).join(", ")}, rated_at = ?, updated_at = ?, sync_state = 'dirty'
        WHERE id = ? AND point_id = ?`,
     )
-    .run(...keys.map((k) => set[k]), iso(Date.now()), attendeeId, point._id);
+    .run(...keys.map((k) => set[k]), nowIso, nowIso, attendeeId, point._id);
   if (!changes) return err(404, "Scan this badge first");
   const lead = db.prepare(`SELECT rating, note FROM lead_booth_leads WHERE id = ?`).get(attendeeId);
   return { data: { rating: lead.rating, note: lead.note }, message: "Lead saved" };

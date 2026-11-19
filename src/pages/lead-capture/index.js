@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import axios from 'axios';
 import {
   Box,
   Button,
@@ -12,8 +13,9 @@ import {
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import CloudSyncOutlinedIcon from '@mui/icons-material/CloudSyncOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-import { apiLeadLink, apiLeadPoints, apiLeadScreen, method } from '../../apiPath';
+import { apiPath, apiLeadLink, apiLeadPoints, apiLeadScreen, apiLeadSync, method } from '../../apiPath';
 import keyNames from '../../keyName';
 import { useApi, useDirect } from '../../hooks';
 import useLanBase from '../../hooks/useLanBase';
@@ -25,6 +27,7 @@ import AgendaDialog from './AgendaDialog';
 import EventLinkBar from './EventLinkBar';
 import downloadCsv from './downloadCsv';
 import LinkQrDialog from './LinkQrDialog';
+import SyncStatus from './SyncStatus';
 
 const errorToast = getToast('error');
 const withToast = () => ({ ...getToast('success', null, keyNames.apiMsg), ...getToast('error') });
@@ -67,6 +70,44 @@ const LeadCapture = () => {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Cloud sync (desktop only): status chips + "Sync now". The server also syncs every 2 min.
+  const [sync, setSync] = useState({ pending: 0, waiting: 0, rejected: [] });
+  const [syncing, setSyncing] = useState(false);
+  const loadSync = useCallback(
+    () =>
+      axios
+        .get(apiPath + apiLeadSync)
+        .then((res) => setSync(res.data.data))
+        .catch(() => {}),
+    []
+  );
+  useEffect(() => {
+    loadSync();
+    const timer = setInterval(loadSync, LIVE_REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [loadSync]);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await axios.post(apiPath + apiLeadSync);
+      setSync(res.data.data);
+      directDispatch(getToast('success', 'Synced', 'Lead capture synced with the cloud').success, keyNames.toastData);
+    } catch (err) {
+      directDispatch(
+        getToast(
+          'error',
+          'Sync failed',
+          err.response?.data?.message || 'Cannot reach the cloud. Changes stay on this PC and sync later.'
+        ).error,
+        keyNames.toastData
+      );
+    } finally {
+      setSyncing(false);
+      load();
+    }
+  };
 
   // Keep "in room now" fresh while looking at rooms
   useEffect(() => {
@@ -174,6 +215,15 @@ const LeadCapture = () => {
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <SyncStatus sync={sync} />
+          <Button
+            variant="outlined"
+            startIcon={<CloudSyncOutlinedIcon />}
+            onClick={handleSync}
+            disabled={syncing}
+          >
+            {syncing ? 'Syncing…' : 'Sync with cloud'}
+          </Button>
           <RefreshButton loading={busy} tooltip="Refresh counts" onClick={load} />
           <Button
             variant="outlined"

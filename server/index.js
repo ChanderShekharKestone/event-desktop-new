@@ -15,6 +15,7 @@ const runMigrations = require("./migrations");
 const { syncFromCloud } = require("./services/cloudSync");
 const { pushLocalChanges } = require("./services/pushSync");
 const { syncGiveaways } = require("./services/giveawaySync");
+const { syncLeads } = require("./services/leadSync");
 
 const app = express();
 // Determine local IP synchronously so the HTTPS cert SAN can include it
@@ -158,14 +159,22 @@ https.createServer({ key: pems.private, cert: pems.cert }, app).listen(HTTPS_POR
 
 // Background sync intervals
 setInterval(() => syncFromCloud(), 5 * 60 * 1000); // every 5 min
-// Giveaways sync after registrations are pushed: a new delegate needs its cloudId first
+// Giveaways and lead capture sync after registrations are pushed: a new delegate needs its
+// cloudId first
 setInterval(
-  () => pushLocalChanges().catch(() => {}).then(() => syncGiveaways()).catch(() => {}),
+  () =>
+    pushLocalChanges()
+      .catch(() => {})
+      .then(() => syncGiveaways())
+      .catch(() => {})
+      .then(() => syncLeads())
+      .catch(() => {}),
   2 * 60 * 1000,
 ); // every 2 min
 
 // Initial cloud sync on startup
 syncFromCloud().catch(console.error);
 syncGiveaways().catch(() => {});
+syncLeads().catch(() => {});
 
 module.exports = app;

@@ -95,13 +95,13 @@ Order to fix in: 1, then 2 + 5 together, then 3, then 4.
 
 ## Lead capture (branch `lead-capture`)
 
-- **Phase B — cloud sync not built yet.** Records carry `sync_state` (dirty/synced) and
-  deletions go to `lead_tombstones`, but nothing pushes or pulls yet. Needs the
-  VosmosVirtualEvents `routes/Offline.js` endpoints + model files (same DB as diy-ui).
-- When Phase B lands: Clean All Data / Restore must also refuse while lead rows are dirty
-  (`pendingPushCount` in `server/routes/appReset.js` only counts registrations + giveaways).
-- Event name and time zone: activation doesn't return them. The universal scanner shows no
-  event name; agenda days / auto check-out / CSV times use this PC's time zone. Phase B
-  should save `eventName` and `eventTimeZone` in settings (already read from there).
+- **Phase B (sync) needs the cloud deploy.** Desktop side committed; the VosmosVirtualEvents
+  changes (`models/leadCapture.js`, `controllers/offlineLeadCapture.js`, 2 routes in
+  `routes/Offline.js`) are written and tested against a local MongoDB but NOT committed or
+  deployed. Until deployed, lead capture stays on the PC ("Cloud lead capture API not available").
+- Lead capture endpoints are open like the other Offline.js ones (anyone with the eventId can
+  read/push lead data). Same exposure as giveaways — worth an auth token for all of Offline.js.
+- Rejected lead records (e.g. "Attendee not found in this event") stay listed with no
+  dismiss button (the giveaway page has one).
 - Attendees are keyed by email: if a delegate's email changes in a cloud pull, their
   earlier visits/leads stay under the old email (same limitation as giveaways, item 7).

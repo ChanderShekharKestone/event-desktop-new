@@ -54,10 +54,14 @@ function getElectron() {
 const listFiles = (dir, ext) =>
   fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(ext)) : [];
 
-// Registrations and giveaway assign/revert not on the cloud yet
+// Registrations, giveaway assign/revert and lead capture changes not on the cloud yet
 const pendingPushCount = () =>
   db.prepare("SELECT COUNT(*) AS c FROM push_pending").get().c +
-  db.prepare("SELECT COUNT(*) AS c FROM giveaway_ops WHERE status = 'pending'").get().c;
+  db.prepare("SELECT COUNT(*) AS c FROM giveaway_ops WHERE status = 'pending'").get().c +
+  db.prepare("SELECT COUNT(*) AS c FROM lead_tombstones").get().c +
+  ["lead_points", "lead_sessions", "lead_visits", "lead_booth_leads"]
+    .map((t) => db.prepare(`SELECT COUNT(*) AS c FROM ${t} WHERE sync_state = 'dirty'`).get().c)
+    .reduce((a, b) => a + b, 0);
 
 function getSummary() {
   return {

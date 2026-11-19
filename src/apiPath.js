@@ -48,6 +48,7 @@ export const apiLeadScreen = (id) => `lead-capture/points/${id}/screen`;
 export const apiLeadAgenda = (id) => `lead-capture/points/${id}/agenda`;
 export const apiLeadLink = "lead-capture/link";
 export const apiLeadExport = "lead-capture/export";
+export const apiLeadSync = "lead-capture/sync"; // GET status, POST push + pull
 // Lead capture — scanner links on LAN devices (the token is the access key)
 export const apiPublicLead = (token) => `public/lead/${token}`;
 export const apiPublicLeadEvent = (token) => `public/lead-event/${token}`;

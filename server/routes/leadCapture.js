@@ -5,6 +5,7 @@ const router = require("express").Router();
 const settings = require("../settings");
 const L = require("../database/leadCapture");
 const { getPointReport, exportLeads } = require("../database/leadReport");
+const { syncLeads, getLeadSyncStatus } = require("../services/leadSync");
 
 const requireEvent = (res) => {
   const eventId = settings.get("eventId");
@@ -47,6 +48,21 @@ router.get("/link", handle((ev) => L.getEventLink(ev)));
 router.post("/link", handle((ev) => L.createEventLink(ev)));
 router.delete("/link", handle((ev) => L.deleteEventLink(ev)));
 router.get("/live", handle((ev) => L.getLiveRooms(ev)));
+
+// GET /api/lead-capture/sync — { pending, waiting, rejected[] }
+router.get("/sync", handle((ev) => ({ data: getLeadSyncStatus(ev) })));
+
+// POST /api/lead-capture/sync — push, then pull. 502 when the cloud can't be reached.
+router.post("/sync", async (_req, res) => {
+  try {
+    const eventId = requireEvent(res);
+    if (!eventId) return;
+    const result = await syncLeads();
+    res.json({ status: 200, message: "Lead capture synced", data: { ...result, ...getLeadSyncStatus(eventId) } });
+  } catch (err) {
+    res.status(502).json({ status: 502, message: err.message || "Cloud sync failed", data: null });
+  }
+});
 
 // GET /api/lead-capture/export?type=booth|room&pointId=&view=attendance|entries
 router.get("/export", (req, res) => {

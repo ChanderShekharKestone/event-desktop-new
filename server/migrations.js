@@ -612,6 +612,19 @@ function runMigrations() {
     )`,
   ).run();
 
+  // Why the cloud refused a record (sync_state = 'rejected'); cleared when it syncs
+  for (const table of ["lead_points", "lead_sessions", "lead_visits", "lead_booth_leads"]) {
+    const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
+    if (!cols.includes("sync_error")) db.prepare(`ALTER TABLE ${table} ADD COLUMN sync_error TEXT`).run();
+  }
+
+  // When rating / note were last changed on this PC (null = not since the last pull). Scans
+  // also bump updated_at, so the cloud only takes a rating / note that was really set here.
+  {
+    const cols = db.prepare("PRAGMA table_info(lead_booth_leads)").all().map((c) => c.name);
+    if (!cols.includes("rated_at")) db.prepare(`ALTER TABLE lead_booth_leads ADD COLUMN rated_at TEXT`).run();
+  }
+
   // Points / sessions deleted here, so the sync can delete them on the cloud too
   db.prepare(
     `CREATE TABLE IF NOT EXISTS lead_tombstones (
