@@ -40,7 +40,8 @@ import SearchDelegates from "./SearchDelegates";
 const ALREADY_SCANNED_MESSAGE =
   "This QR code has already been scanned, please visit the help desk";
 
-const Scan = () => {
+/** kiosk — opened as the LAN kiosk (#/scan): no camera button there (admin panel only) */
+const Scan = ({ kiosk = false }) => {
   const hitApi = useApi();
   const directDispatch = useDirect();
   const {
@@ -370,16 +371,18 @@ const Scan = () => {
                 position: "relative",
               }}
             />
-            {/* Camera scanning (laptop webcam / kiosk tablet camera); handheld scanners work without it */}
-            <Button
-              variant="contained"
-              size="large"
-              fullWidth
-              disabled={checkinPending}
-              onClick={isScanning ? resetScanner : startScanning}
-            >
-              {isScanning ? "Stop Scanning" : "Scan QR Code"}
-            </Button>
+            {/* Camera scanning — admin panel only; kiosks scan with a handheld / built-in scanner */}
+            {!kiosk && (
+              <Button
+                variant="contained"
+                size="large"
+                fullWidth
+                disabled={checkinPending}
+                onClick={isScanning ? resetScanner : startScanning}
+              >
+                {isScanning ? "Stop Scanning" : "Scan QR Code"}
+              </Button>
+            )}
           </>
         ) : (
           <SearchDelegates onPrint={handleCheckin} />
