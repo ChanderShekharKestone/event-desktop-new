@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Dialog,
   DialogContent,
   DialogTitle,
   Button,
@@ -9,6 +8,7 @@ import {
   IconButton,
   Chip,
 } from "@mui/material";
+import Dialog from "../../component/Dialog";
 import CloseIcon from "@mui/icons-material/Close";
 import PrintIcon from "@mui/icons-material/Print";
 import { useReactToPrint } from "react-to-print";
@@ -53,6 +53,7 @@ const PrintableBadgeModal = ({ userInfo, onClose, badgeData, types }) => {
     <Dialog
       open={Boolean(userInfo)}
       onClose={onClose}
+      hideCloseButton // its own × is in the title row
       maxWidth="md"
       fullWidth
       slotProps={{ paper: { sx: { borderRadius: "16px" } } }}

@@ -2,12 +2,12 @@ import { useState } from 'react';
 import {
   Box,
   Button,
-  Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   TextField,
 } from '@mui/material';
+import Dialog from '../../component/Dialog';
 
 const emptyForm = (point) => ({
   name: point?.name || '',

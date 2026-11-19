@@ -5,7 +5,6 @@ import {
   Button,
   Chip,
   CircularProgress,
-  Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
@@ -14,6 +13,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import Dialog from '../../component/Dialog';
 import SearchIcon from '@mui/icons-material/Search';
 import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined';
 import { apiScanDelegates, method } from '../../apiPath';

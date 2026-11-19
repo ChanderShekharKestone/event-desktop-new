@@ -6,7 +6,6 @@ import {
   Box,
   Button,
   Chip,
-  Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
@@ -15,6 +14,7 @@ import {
   Typography,
   useMediaQuery,
 } from '@mui/material';
+import Dialog from '../../component/Dialog';
 import { DataGrid } from '@mui/x-data-grid';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';

@@ -5,12 +5,12 @@ import {
   Box,
   Button,
   ButtonBase,
-  Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Typography,
 } from '@mui/material';
+import Dialog from '../../component/Dialog';
 import { apiPath } from '../../apiPath';
 import { groupByDay, runningSession, sessionState } from '../lead-capture/agenda';
 

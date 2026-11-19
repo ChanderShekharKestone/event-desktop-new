@@ -16,6 +16,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 import useApi from "../../hooks/useApi";
 import DataManagement from "./DataManagement";
+import { LinkQrDialog } from "../../component";
 import { useDirect } from "../../hooks";
 import keyNames from "../../keyName";
 import { getToast } from "../../common/utils";
@@ -81,6 +82,7 @@ const Settings = () => {
   const pendingCount = syncPendingCount?.count ?? 0;
   const [kioskUrl, setKioskUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [kioskQr, setKioskQr] = useState(null); // { url, title } shown as a QR code
 
   const fetchKioskUrl = () => {
     fetch(apiPath + apiLocalIp)
@@ -391,12 +393,26 @@ const Settings = () => {
               <IconButton onClick={fetchKioskUrl} edge="end" sx={{ color: "#201751" }}>
                 <Refresh fontSize="small" />
               </IconButton>
+              <Tooltip title="Show QR code">
+                <span>
+                  <IconButton
+                    onClick={() => setKioskQr({ url: kioskUrl, title: "Scan Kiosk link" })}
+                    disabled={!kioskUrl}
+                    edge="end"
+                    sx={{ color: "#201751" }}
+                  >
+                    <QrCode2 fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
               <IconButton onClick={handleCopy} edge="end" sx={{ color: copied ? "#16A34A" : "#201751" }}>
                 {copied ? <Check fontSize="small" /> : <ContentCopy fontSize="small" />}
               </IconButton>
             </InputAdornment>
           }
         />
+        {/* Kiosk tablets / phones open the link by scanning this */}
+        <LinkQrDialog qr={kioskQr} onClose={() => setKioskQr(null)} onCopy={handleCopy} />
       </Box>
 
       {/* Registration Forms */}

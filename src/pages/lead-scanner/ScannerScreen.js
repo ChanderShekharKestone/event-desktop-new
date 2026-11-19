@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   CircularProgress,
-  Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
@@ -14,6 +13,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
+import Dialog from '../../component/Dialog';
 import LinkOffIcon from '@mui/icons-material/LinkOff';
 import { apiPath } from '../../apiPath';
 import { useQrScanner, useScanInput } from '../../hooks';

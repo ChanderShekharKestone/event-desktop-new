@@ -5,7 +5,6 @@ import {
   Button,
   Divider,
   CircularProgress,
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -14,6 +13,7 @@ import {
   FormControlLabel,
   Alert,
 } from "@mui/material";
+import Dialog from "../../component/Dialog";
 import { Backup, Restore, DeleteForever, CheckCircle } from "@mui/icons-material";
 import axios from "axios";
 import {

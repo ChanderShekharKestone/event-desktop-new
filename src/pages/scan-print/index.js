@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   CircularProgress,
-  Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
@@ -13,6 +12,7 @@ import {
   Snackbar,
   Typography,
 } from "@mui/material";
+import Dialog from "../../component/Dialog";
 import { useSelector } from "react-redux";
 import BarcodeReader from "react-barcode-reader";
 
@@ -99,7 +99,12 @@ const Scan = () => {
       setReprintPrompt(lastAttemptRef.current);
     } else {
       directDispatch(
-        { type: "error", title: "Error", description: msg, position: "top-center" },
+        {
+          type: "error",
+          title: "Error",
+          description: msg,
+          position: "top-center",
+        },
         keyNames.toastData,
       );
     }
@@ -111,7 +116,6 @@ const Scan = () => {
     setReprintPrompt(null);
   };
 
-  // eslint-disable-next-line no-unused-vars -- startScanning/resetScanner kept for the commented-out button below
   const { startScanning, isScanning, resetScanner } = useQrScanner({
     onScan: (text) => handleCheckin(text),
   });
@@ -311,7 +315,10 @@ const Scan = () => {
           )}
         </Dialog>
 
-        <Dialog open={reprintPrompt !== null} onClose={() => setReprintPrompt(null)}>
+        <Dialog
+          open={reprintPrompt !== null}
+          onClose={() => setReprintPrompt(null)}
+        >
           <DialogTitle>Print again?</DialogTitle>
           <DialogContent>
             <DialogContentText>
@@ -363,7 +370,7 @@ const Scan = () => {
                 position: "relative",
               }}
             />
-            {/* Scan QR Code (camera) button commented, same as vosmos-events-client
+            {/* Camera scanning (laptop webcam / kiosk tablet camera); handheld scanners work without it */}
             <Button
               variant="contained"
               size="large"
@@ -373,7 +380,6 @@ const Scan = () => {
             >
               {isScanning ? "Stop Scanning" : "Scan QR Code"}
             </Button>
-            */}
           </>
         ) : (
           <SearchDelegates onPrint={handleCheckin} />

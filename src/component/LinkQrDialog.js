@@ -1,8 +1,9 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { Box, Button, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import Dialog from './Dialog';
 import QRCode from 'react-qr-code';
 
 /**
- * Scanner link as a QR code — volunteers point their phone camera at it to open the scanner.
+ * A LAN link as a QR code (lead capture scanners, scan kiosk) — point a phone camera at it.
  * Desktop only: the app window can't open browser tabs, and phones need the link anyway.
  * `qr` is { url, title } or null.
  */
@@ -19,7 +20,7 @@ const LinkQrDialog = ({ qr, onClose, onCopy }) => (
             {qr.url}
           </Typography>
           <Typography sx={{ fontSize: 12, color: '#6b7280', mt: 1 }}>
-            The phone must be on the same Wi-Fi as this PC. It may warn about the security certificate
+            The device must be on the same Wi-Fi as this PC. It may warn about the security certificate
             the first time — choose to continue (it's this PC's own certificate).
           </Typography>
         </>

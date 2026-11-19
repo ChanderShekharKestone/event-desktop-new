@@ -4,7 +4,6 @@ import axios from 'axios';
 import {
   Box,
   Button,
-  Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
@@ -12,6 +11,7 @@ import {
   Tabs,
   Typography,
 } from '@mui/material';
+import Dialog from '../../component/Dialog';
 import AddIcon from '@mui/icons-material/Add';
 import CloudSyncOutlinedIcon from '@mui/icons-material/CloudSyncOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
@@ -20,13 +20,12 @@ import keyNames from '../../keyName';
 import { useApi, useDirect } from '../../hooks';
 import useLanBase from '../../hooks/useLanBase';
 import { getToast } from '../../common/utils';
-import { RefreshButton, ScreenSettingsDialog } from '../../component';
+import { RefreshButton, ScreenSettingsDialog, LinkQrDialog } from '../../component';
 import PointCard from './PointCard';
 import PointDialog from './PointDialog';
 import AgendaDialog from './AgendaDialog';
 import EventLinkBar from './EventLinkBar';
 import downloadCsv from './downloadCsv';
-import LinkQrDialog from './LinkQrDialog';
 import SyncStatus from './SyncStatus';
 
 const errorToast = getToast('error');
