@@ -515,6 +515,113 @@ function runMigrations() {
       `CREATE INDEX IF NOT EXISTS idx_registrations_unique_user_id ON registrations (eventId, uniqueUserId)`,
     ).run();
   }
+
+  // ── Lead capture (booths / rooms) ─────────────────────────────────────────
+  // Ported from the diy-ui api (CapturePoint, AgendaSession, CaptureVisit, BoothLead,
+  // LeadLink). Ids are 24-hex, made here or pulled from the cloud, so a record has the
+  // same _id on both sides. Times are ISO strings (toISOString), so they sort as text.
+  // Attendees are keyed by lowercase email (stable across cloud pulls, like giveaways);
+  // attendee_cloud_id is the cloud Attendee _id when known. sync_state: dirty = changed
+  // here since the last push, synced = matches the cloud.
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS lead_points (
+      id TEXT PRIMARY KEY,
+      event_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      exhibitor_name TEXT NOT NULL DEFAULT '',
+      capacity INTEGER,
+      scan_token TEXT UNIQUE,
+      token_expires_at TEXT,
+      screen TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      sync_state TEXT NOT NULL DEFAULT 'dirty'
+    )`,
+  ).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_lead_points_event ON lead_points (event_id, type)`).run();
+
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS lead_sessions (
+      id TEXT PRIMARY KEY,
+      event_id TEXT NOT NULL,
+      room_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      speaker TEXT NOT NULL DEFAULT '',
+      start_time TEXT NOT NULL,
+      end_time TEXT NOT NULL,
+      actual_start_time TEXT,
+      actual_end_time TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      sync_state TEXT NOT NULL DEFAULT 'dirty'
+    )`,
+  ).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_lead_sessions_room ON lead_sessions (room_id, start_time)`).run();
+
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS lead_visits (
+      id TEXT PRIMARY KEY,
+      event_id TEXT NOT NULL,
+      point_id TEXT NOT NULL,
+      attendee_email TEXT,
+      attendee_cloud_id TEXT,
+      type TEXT NOT NULL,
+      in_time TEXT NOT NULL,
+      out_time TEXT,
+      status TEXT,
+      out_reason TEXT,
+      is_exit_estimated INTEGER NOT NULL DEFAULT 0,
+      auto_close_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      sync_state TEXT NOT NULL DEFAULT 'dirty'
+    )`,
+  ).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS idx_lead_visits_point ON lead_visits (point_id, in_time)`).run();
+  db.prepare(
+    `CREATE INDEX IF NOT EXISTS idx_lead_visits_open ON lead_visits (event_id, attendee_email, status)`,
+  ).run();
+
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS lead_booth_leads (
+      id TEXT PRIMARY KEY,
+      event_id TEXT NOT NULL,
+      point_id TEXT NOT NULL,
+      attendee_email TEXT,
+      attendee_cloud_id TEXT,
+      rating TEXT,
+      note TEXT NOT NULL DEFAULT '',
+      visit_count INTEGER NOT NULL DEFAULT 0,
+      first_visit_at TEXT,
+      last_visit_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      sync_state TEXT NOT NULL DEFAULT 'dirty',
+      UNIQUE (point_id, attendee_email)
+    )`,
+  ).run();
+
+  // Event-wide ("universal") scanner link — one per event, local to this PC
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS lead_links (
+      event_id TEXT PRIMARY KEY,
+      scan_token TEXT NOT NULL UNIQUE,
+      token_expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )`,
+  ).run();
+
+  // Points / sessions deleted here, so the sync can delete them on the cloud too
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS lead_tombstones (
+      kind TEXT NOT NULL,
+      id TEXT NOT NULL,
+      event_id TEXT NOT NULL,
+      deleted_at TEXT NOT NULL,
+      PRIMARY KEY (kind, id)
+    )`,
+  ).run();
 }
 
 module.exports = runMigrations;

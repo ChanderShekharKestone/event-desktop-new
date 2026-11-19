@@ -417,6 +417,7 @@ module.exports = {
   getRegistrationsPaginated,
   checkinById,
   checkinByEmail,
+  findBadgeRow,
   searchDelegates,
   rowToObject,
   updateCloudId,

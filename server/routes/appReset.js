@@ -32,6 +32,12 @@ const TABLES = [
   "giveaway_assignments",
   "giveaway_ops",
   "form_headings",
+  "lead_points",
+  "lead_sessions",
+  "lead_visits",
+  "lead_booth_leads",
+  "lead_links",
+  "lead_tombstones",
 ];
 
 // Electron APIs are available because the server runs inside the Electron main

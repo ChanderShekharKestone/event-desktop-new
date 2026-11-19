@@ -75,6 +75,12 @@ const LAN_ALLOWED = [
   ["GET", /^\/api\/badge-templates$/],
   ["POST", /^\/api\/scan\/(checkin|search)$/],
   ["GET", /^\/api\/scan\/delegates$/],
+  // Lead capture scanner links (the link token is the access key)
+  ["GET", /^\/api\/public\/lead\/[^/]+$/],
+  ["POST", /^\/api\/public\/lead\/[^/]+\/(scan|session|rate)$/],
+  ["GET", /^\/api\/public\/lead-event\/[^/]+$/],
+  ["GET", /^\/api\/public\/lead-event\/[^/]+\/points\/[^/]+$/],
+  ["POST", /^\/api\/public\/lead-event\/[^/]+\/points\/[^/]+\/(scan|session|rate)$/],
 ];
 const LOOPBACK = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
 
@@ -99,6 +105,8 @@ app.use("/api/registration-fields", require("./routes/registrationFields"));
 app.use("/api/app-reset", require("./routes/appReset"));
 app.use("/api/giveaway", require("./routes/giveaway"));
 app.use("/api/form-headings", require("./routes/formHeadings"));
+app.use("/api/lead-capture", require("./routes/leadCapture"));
+app.use("/api/public", require("./routes/leadPublic"));
 // Test-data endpoints (seed / wipe) only in development
 if (!process.env.APP_PACKAGED) app.use("/api/seed", require("./routes/seed"));
 

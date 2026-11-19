@@ -67,3 +67,19 @@ export const toPx = (value, total) => {
   }
   return Number(value) || 0;
 };
+
+// Public scanner screens (lead capture booth / room): CSS background for the admin's CDN
+// image, dimmed so the cards stand out. URL.href percent-encodes quotes, so the value can't
+// break out of url("…"). Returns null when there's no usable image.
+export const screenBackground = (value) => {
+  try {
+    const url = new URL(value);
+    if (!["http:", "https:"].includes(url.protocol)) return null;
+    return `linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url("${url.href}") center / cover no-repeat fixed, #1f2937`;
+  } catch {
+    return null;
+  }
+};
+
+// Screen settings "position" → flex alignment of the cards on wide screens
+export const SCREEN_ALIGN = { left: "flex-start", center: "center", right: "flex-end" };

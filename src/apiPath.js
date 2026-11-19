@@ -42,6 +42,16 @@ export const apiUserScan = "scan/checkin";
 export const apiUserSearch = "scan/search";
 export const apiScanDelegates = "scan/delegates";
 
+// Lead capture — admin (this PC only)
+export const apiLeadPoints = "lead-capture/points";
+export const apiLeadScreen = (id) => `lead-capture/points/${id}/screen`;
+export const apiLeadAgenda = (id) => `lead-capture/points/${id}/agenda`;
+export const apiLeadLink = "lead-capture/link";
+export const apiLeadExport = "lead-capture/export";
+// Lead capture — scanner links on LAN devices (the token is the access key)
+export const apiPublicLead = (token) => `public/lead/${token}`;
+export const apiPublicLeadEvent = (token) => `public/lead-event/${token}`;
+
 // Backup / Restore / Clean all data (host PC only)
 export const apiAppResetSummary = "app-reset/summary";
 export const apiAppResetExport = "app-reset/export";

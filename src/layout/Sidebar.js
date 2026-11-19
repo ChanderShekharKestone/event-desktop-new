@@ -7,6 +7,7 @@ import {
   LockReset,
   AppRegistration,
   CardGiftcard,
+  QrCodeScanner,
 } from "@mui/icons-material";
 import { Box } from "@mui/material";
 import { apiActivation, method } from "../apiPath";
@@ -37,6 +38,7 @@ const sections = [
     items: [
       { label: "Scan & Print", link: "/app/scan-print", icon: Print },
       { label: "Giveaway", link: "/app/giveaway", icon: CardGiftcard },
+      { label: "Lead Capture", link: "/app/lead-capture", icon: QrCodeScanner },
       { label: "Settings", link: "/app/settings", icon: Settings },
     ],
   },

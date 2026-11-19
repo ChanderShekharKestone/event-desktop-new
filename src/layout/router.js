@@ -14,6 +14,11 @@ const Settings = LazyLoad(lazy(() => import("../pages/settings")));
 const ScanKiosk = LazyLoad(lazy(() => import("../pages/scan-kiosk")));
 const RegistrationsConfig = LazyLoad(lazy(() => import("../pages/registrations-config")));
 const Giveaway = LazyLoad(lazy(() => import("../pages/giveaway")));
+const LeadCapture = LazyLoad(lazy(() => import("../pages/lead-capture")));
+const LeadReport = LazyLoad(lazy(() => import("../pages/lead-capture/Report")));
+// Lead capture scanners — opened on phones / tablets on the LAN, no login (token = access)
+const LeadScanner = LazyLoad(lazy(() => import("../pages/lead-scanner")));
+const EventScanner = LazyLoad(lazy(() => import("../pages/lead-scanner/EventScanner")));
 const router = createBrowserRouter([
   {
     path: "/",
@@ -30,6 +35,14 @@ const router = createBrowserRouter([
   {
     path: "/scan",
     element: <ScanKiosk />,
+  },
+  {
+    path: "/lead/:token",
+    element: <LeadScanner />,
+  },
+  {
+    path: "/lead-scan/:token",
+    element: <EventScanner />,
   },
 
   {
@@ -59,6 +72,14 @@ const router = createBrowserRouter([
       {
         path: "giveaway",
         element: <Giveaway />,
+      },
+      {
+        path: "lead-capture",
+        element: <LeadCapture />,
+      },
+      {
+        path: "lead-capture/:id",
+        element: <LeadReport />,
       },
     ],
   },

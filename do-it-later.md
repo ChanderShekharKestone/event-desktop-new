@@ -92,3 +92,16 @@ Order to fix in: 1, then 2 + 5 together, then 3, then 4.
   delegates whose `status` is hold / pending / reject(ed) ("registration isn't confirmed",
   403) and counts `printCount` on every print. The desktop stores neither field, so it
   checks those delegates in. Needs `status` (and `printCount`) in the pull + push first.
+
+## Lead capture (branch `lead-capture`)
+
+- **Phase B — cloud sync not built yet.** Records carry `sync_state` (dirty/synced) and
+  deletions go to `lead_tombstones`, but nothing pushes or pulls yet. Needs the
+  VosmosVirtualEvents `routes/Offline.js` endpoints + model files (same DB as diy-ui).
+- When Phase B lands: Clean All Data / Restore must also refuse while lead rows are dirty
+  (`pendingPushCount` in `server/routes/appReset.js` only counts registrations + giveaways).
+- Event name and time zone: activation doesn't return them. The universal scanner shows no
+  event name; agenda days / auto check-out / CSV times use this PC's time zone. Phase B
+  should save `eventName` and `eventTimeZone` in settings (already read from there).
+- Attendees are keyed by email: if a delegate's email changes in a cloud pull, their
+  earlier visits/leads stay under the old email (same limitation as giveaways, item 7).
